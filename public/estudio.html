@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Taluna · Organizador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --bg-soft:#FAF7F2; --rail:#FBF9F5; --card:#FFFFFF;
+  --ink:#2A2622; --ink-2:#4B453D; --muted:#938A7C; --faint:#B6AD9D;
+  --line:rgba(42,38,34,.12); --line-soft:rgba(42,38,34,.07);
+  --camel:#B07C4B; --camel-d:#8F6231; --camel-bg:#F4EADC;
+  --burg:#6E2B39; --burg-bg:#F3E5E8;
+  --charcoal:#2C2823;
+  --good:#3F7A57; --good-bg:#E3F0E7;
+  --warn:#B5792A; --warn-bg:#F8ECD8;
+  --bad:#A23B46; --bad-bg:#F6E4E6;
+  --blue-bg:#E7EDF2;
+  --r:18px; --r-sm:12px; --r-lg:26px;
+  --shadow:0 1px 2px rgba(42,38,34,.04), 0 22px 44px -30px rgba(42,38,34,.34);
+  --shadow-sm:0 1px 2px rgba(42,38,34,.05), 0 8px 22px -18px rgba(42,38,34,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Manrope",system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+::selection{background:var(--camel-bg)}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+h1,h2,h3,h4{margin:0;font-family:"Fraunces";font-weight:400;letter-spacing:-.01em;color:var(--charcoal)}
+a{color:inherit}
+.fr{font-family:"Fraunces"}
+.glyph{display:inline-block;vertical-align:middle;color:var(--charcoal)}
+
+/* scrollbars */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{background:rgba(42,38,34,.16);border-radius:20px;border:3px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-thumb:hover{background:rgba(42,38,34,.3);background-clip:content-box}
+
+/* ---------- shell ---------- */
+.shell{min-height:100dvh;display:grid;grid-template-columns:1fr}
+.sidebar{position:fixed;z-index:80;inset:0 auto 0 0;width:268px;background:var(--rail);
+  border-right:1px solid var(--line-soft);transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  display:flex;flex-direction:column;padding:18px 16px 14px}
+.sidebar.open{transform:none}
+.backdrop{position:fixed;inset:0;background:rgba(40,35,30,.34);backdrop-filter:blur(2px);z-index:70;opacity:0;pointer-events:none;transition:.25s}
+.backdrop.show{opacity:1;pointer-events:auto}
+.brand{display:flex;align-items:center;gap:11px;padding:8px 10px 18px}
+.brand .glyph{color:var(--burg)}
+.brand b{font-family:"Fraunces";font-weight:500;font-size:1.12rem;letter-spacing:.01em;line-height:1}
+.brand small{display:block;font-family:"Manrope";font-weight:600;font-size:.62rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--camel-d);margin-top:3px}
+.nav{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;margin:0 -4px;padding:0 4px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;border:none;background:transparent;
+  color:var(--ink-2);font-weight:600;font-size:.92rem;text-align:left;width:100%;transition:.14s;position:relative}
+.nav-item .ico{width:20px;height:20px;flex:none;display:grid;place-items:center;color:var(--muted)}
+.nav-item .ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7}
+.nav-item:hover{background:#fff;color:var(--ink)}
+.nav-item.active{background:var(--charcoal);color:#fff}
+.nav-item.active .ico{color:var(--camel)}
+.nav-item .cnt{margin-left:auto;font-size:.72rem;font-weight:700;background:rgba(42,38,34,.08);color:var(--ink-2);
+  padding:2px 8px;border-radius:20px;min-width:22px;text-align:center}
+.nav-item.active .cnt{background:rgba(255,255,255,.16);color:#fff}
+.nav-item .cnt.alert{background:var(--warn-bg);color:var(--warn)}
+.nav-sep{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);font-weight:700;
+  padding:14px 13px 6px;margin-top:4px}
+.rail-foot{padding:12px 10px 4px;border-top:1px solid var(--line-soft);margin-top:8px}
+.rail-foot .save-dot{display:flex;align-items:center;gap:8px;font-size:.74rem;color:var(--muted);font-weight:600}
+.rail-foot .save-dot i{width:7px;height:7px;border-radius:50%;background:var(--good);transition:.3s}
+.rail-foot a.back{display:flex;align-items:center;gap:8px;font-size:.74rem;color:var(--camel-d);font-weight:700;text-decoration:none;margin-top:10px}
+
+/* main */
+.main{min-width:0;display:flex;flex-direction:column;min-height:100dvh}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:12px;padding:11px 16px;padding-top:max(11px,env(safe-area-inset-top))}
+.hamb{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;flex:none}
+.hamb svg{width:20px;height:20px;stroke:var(--ink);stroke-width:1.8;fill:none}
+.topbar .tb-title{font-family:"Fraunces";font-weight:500;font-size:1.05rem;line-height:1.1}
+.topbar .tb-sub{font-size:.72rem;color:var(--muted);font-weight:600}
+.tb-spacer{flex:1}
+.saved-flash{font-size:.72rem;font-weight:700;color:var(--good);opacity:0;transition:.3s;white-space:nowrap}
+.saved-flash.show{opacity:1}
+.saved-flash.warn-flash{color:var(--warn)}
+
+.view{flex:1;padding:22px 16px 96px;max-width:1180px;width:100%;margin:0 auto}
+.view-head{margin-bottom:20px}
+.eyebrow{display:inline-flex;align-items:center;gap:.6em;font-size:.66rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--camel-d)}
+.eyebrow .glyph{color:var(--camel)}
+.view-head h1{font-size:clamp(1.7rem,5vw,2.5rem);line-height:1.05;margin:.28em 0 .12em}
+.view-head p.intro{color:var(--muted);max-width:62ch;font-size:1rem}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;font-weight:700;font-size:.9rem;
+  border-radius:100px;padding:.72em 1.2em;border:1.4px solid var(--line);background:#fff;color:var(--ink);transition:.16s;line-height:1;text-decoration:none}
+.btn:hover{border-color:var(--charcoal);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9}
+.btn.primary{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+.btn.primary:hover{background:#1e1b17}
+.btn.camel{background:var(--camel);color:#fff;border-color:var(--camel)}
+.btn.camel:hover{background:var(--camel-d)}
+.btn.good{background:var(--good);color:#fff;border-color:var(--good)}
+.btn.ghost{background:transparent}
+.btn.sm{font-size:.8rem;padding:.55em .95em}
+.btn.block{width:100%}
+.btn.danger{color:var(--bad);border-color:var(--bad-bg)}
+.btn.danger:hover{background:var(--bad-bg);border-color:var(--bad)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px}
+
+/* generic card */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm)}
+.soft{background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:var(--r)}
+
+/* dashboard */
+.hero-panel{background:linear-gradient(135deg,#fff, var(--bg-soft));border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:26px 24px;box-shadow:var(--shadow);margin-bottom:20px}
+.hero-panel h2{font-size:clamp(1.5rem,4vw,2rem);line-height:1.1}
+.hero-panel p{color:var(--muted);margin:.4em 0 0;max-width:54ch}
+.quick-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+.stat{padding:18px 18px;border-radius:var(--r);border:1px solid var(--line);background:#fff;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.stat .n{font-family:"Fraunces";font-size:2.2rem;line-height:1;color:var(--charcoal)}
+.stat .l{font-size:.8rem;color:var(--muted);font-weight:600;margin-top:6px}
+.stat .g{position:absolute;right:14px;top:14px;color:var(--camel-bg)}
+.stat .g .glyph{color:var(--camel-bg)}
+.stat.alert{background:var(--warn-bg);border-color:transparent}
+.stat.alert .n{color:var(--warn)}
+.stat.alert .l{color:#9a6b1f}
+.stat.good2{background:var(--good-bg);border-color:transparent}
+.stat.good2 .n{color:var(--good)}
+.stat.good2 .l{color:#2f5e43}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:26px 0 14px}
+.section-title h3{font-size:1.3rem}
+.section-title .lab{font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--camel-d);font-weight:700}
+
+/* product grid + cards */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.prod-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;transition:.18s;cursor:pointer}
+.prod-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--line)}
+.prod-thumb{aspect-ratio:1/1;background:var(--bg-soft);position:relative;display:grid;place-items:center;overflow:hidden}
+.prod-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.prod-thumb .ph{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--faint)}
+.prod-thumb .ph .glyph{color:#E4D8C6}
+.prod-thumb .ph span{font-size:.72rem;font-weight:600}
+.prod-thumb .pcount{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.92);border-radius:20px;
+  padding:3px 9px;font-size:.68rem;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:5px}
+.prod-thumb .pcount svg{width:12px;height:12px;stroke:var(--muted);fill:none;stroke-width:2}
+.prod-body{padding:14px 15px 15px;display:flex;flex-direction:column;gap:7px;flex:1}
+.prod-body .nm{font-family:"Fraunces";font-weight:500;font-size:1.12rem;line-height:1.1;color:var(--charcoal)}
+.prod-body .meta{font-size:.78rem;color:var(--muted);font-weight:600}
+.prod-body .price{font-weight:800;color:var(--ink);font-size:.95rem}
+.pill-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto;padding-top:4px}
+.pill{font-size:.64rem;font-weight:700;letter-spacing:.02em;padding:3px 9px;border-radius:20px;text-transform:uppercase}
+.pill.activa,.pill.activo,.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.oculta,.pill.oculto{background:rgba(42,38,34,.08);color:var(--ink-2)}
+.pill.agotada,.pill.agotado,.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.proxima,.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.tag{background:var(--camel-bg);color:var(--camel-d)}
+.pill.burg{background:var(--burg-bg);color:var(--burg)}
+.pill.incomplete{background:var(--warn-bg);color:var(--warn)}
+.add-card{border:1.6px dashed var(--line);border-radius:var(--r);background:var(--bg-soft);display:grid;place-items:center;
+  min-height:160px;color:var(--camel-d);font-weight:700;cursor:pointer;transition:.16s;text-align:center;padding:20px}
+.add-card:hover{border-color:var(--camel);background:#fff}
+.add-card .plus{width:46px;height:46px;border-radius:50%;background:#fff;display:grid;place-items:center;margin:0 auto 10px;border:1px solid var(--line)}
+.add-card .plus svg{width:22px;height:22px;stroke:var(--camel);stroke-width:2;fill:none}
+.empty-note{padding:30px;text-align:center;color:var(--muted);border:1.4px dashed var(--line);border-radius:var(--r);background:var(--bg-soft)}
+
+/* filter bar */
+.filterbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;-webkit-overflow-scrolling:touch}
+.fchip{flex:none;font-size:.82rem;font-weight:700;border:1.3px solid var(--line);background:#fff;border-radius:100px;
+  padding:.5em 1em;color:var(--ink-2);transition:.14s;white-space:nowrap}
+.fchip.on{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+
+/* editor overlay */
+.editor{position:fixed;inset:0;z-index:120;background:rgba(40,35,30,.4);backdrop-filter:blur(3px);
+  display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:0;opacity:0;pointer-events:none;transition:.22s}
+.editor.show{opacity:1;pointer-events:auto}
+.editor-sheet{background:var(--bg);width:100%;max-width:780px;min-height:100dvh;box-shadow:var(--shadow);
+  transform:translateY(16px);transition:.24s cubic-bezier(.2,.8,.2,1)}
+.editor.show .editor-sheet{transform:none}
+.editor-head{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:12px;padding:14px 18px;padding-top:max(14px,env(safe-area-inset-top))}
+.editor-head h2{font-size:1.2rem}
+.editor-head .esub{font-size:.74rem;color:var(--muted);font-weight:600}
+.editor-body{padding:18px 18px 40px}
+.editor-foot{position:sticky;bottom:0;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);padding:13px 18px;padding-bottom:max(13px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center}
+.icon-btn{width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;flex:none}
+.icon-btn svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:1.8}
+
+.fgroup{margin-bottom:22px}
+.fgroup>.gh{display:flex;align-items:center;gap:.6em;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--camel-d);font-weight:700;margin-bottom:12px}
+.fgroup>.gh .glyph{color:var(--camel)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field.col-full{grid-column:1/-1}
+.field label{font-size:.74rem;font-weight:700;color:var(--ink-2);letter-spacing:.01em}
+.field label .req{color:var(--burg)}
+.inp,select.inp,textarea.inp{width:100%;border:1.4px solid var(--line);border-radius:11px;background:#fff;padding:.7em .85em;
+  font-size:.92rem;color:var(--ink);transition:.14s}
+.inp:focus,textarea.inp:focus,select.inp:focus{outline:none;border-color:var(--camel);box-shadow:0 0 0 3px var(--camel-bg)}
+textarea.inp{resize:vertical;min-height:72px}
+.inp::placeholder,textarea.inp::placeholder{color:var(--faint)}
+.price-wrap{position:relative}
+.price-wrap::before{content:"$";position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700}
+.price-wrap .inp{padding-left:24px}
+.multichip{display:flex;flex-wrap:wrap;gap:7px}
+.mc{font-size:.8rem;font-weight:700;border:1.3px solid var(--line);background:#fff;border-radius:100px;padding:.42em .9em;color:var(--ink-2);transition:.14s;user-select:none}
+.mc:hover{border-color:var(--charcoal)}
+.mc.on{background:var(--camel);color:#fff;border-color:var(--camel)}
+
+/* photo grid */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.pslot{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.pslot .ptop{aspect-ratio:4/3;background:var(--bg-soft);position:relative;display:grid;place-items:center;cursor:pointer;overflow:hidden}
+.pslot .ptop img{width:100%;height:100%;object-fit:cover}
+.pslot .ptop .drop{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--faint);text-align:center;padding:8px}
+.pslot .ptop .drop svg{width:22px;height:22px;stroke:var(--camel);fill:none;stroke-width:1.7}
+.pslot .ptop .drop b{font-size:.72rem;font-weight:700;color:var(--camel-d)}
+.pslot .ptop .rmv{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.92);
+  border:none;display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+.pslot .ptop .rmv svg{width:14px;height:14px;stroke:var(--bad);stroke-width:2.4;fill:none}
+.pslot .req-dot{position:absolute;top:7px;left:7px;background:var(--burg);color:#fff;font-size:.56rem;font-weight:800;
+  padding:2px 7px;border-radius:20px;letter-spacing:.04em}
+.pslot .plabel{padding:9px 11px;font-size:.74rem;font-weight:700;color:var(--ink-2);border-top:1px solid var(--line-soft)}
+.pslot .roles{display:flex;flex-wrap:wrap;gap:4px;padding:0 9px 10px}
+.rrole{font-size:.6rem;font-weight:700;border:1px solid var(--line);border-radius:20px;padding:2px 7px;color:var(--muted);background:#fff}
+.rrole.on{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+.pslot.video .ptop{cursor:default}
+.pslot .vid-inp{padding:9px;border-top:1px solid var(--line-soft)}
+
+/* compat */
+.pickbar{display:flex;gap:9px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px}
+.pickbag{flex:none;border:1.4px solid var(--line);background:#fff;border-radius:16px;padding:8px 8px 8px 8px;display:flex;
+  align-items:center;gap:10px;min-width:150px;transition:.14s}
+.pickbag .pb-th{width:46px;height:46px;border-radius:10px;background:var(--bg-soft);overflow:hidden;flex:none;display:grid;place-items:center}
+.pickbag .pb-th img{width:100%;height:100%;object-fit:cover}
+.pickbag .pb-th .glyph{color:#E4D8C6}
+.pickbag .pb-nm{font-weight:700;font-size:.9rem;text-align:left;line-height:1.1}
+.pickbag .pb-nm small{display:block;color:var(--muted);font-weight:600;font-size:.72rem}
+.pickbag.on{border-color:var(--charcoal);background:var(--charcoal);color:#fff}
+.pickbag.on .pb-nm small{color:rgba(255,255,255,.7)}
+.compat-info{background:var(--burg-bg);border-radius:14px;padding:13px 16px;font-size:.86rem;color:var(--burg);
+  font-weight:600;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start}
+.compat-info svg{width:18px;height:18px;stroke:var(--burg);fill:none;stroke-width:2;flex:none;margin-top:1px}
+.strap-pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.spcard{border:1.4px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;transition:.16s}
+.spcard.active{border-color:var(--camel);box-shadow:var(--shadow-sm)}
+.spcard.hidden-c{opacity:.5}
+.spcard .sp-head{display:flex;gap:12px;padding:12px;align-items:center}
+.sp-th{width:58px;height:58px;border-radius:11px;background:var(--bg-soft);overflow:hidden;flex:none;display:grid;place-items:center}
+.sp-th img{width:100%;height:100%;object-fit:cover}
+.sp-th .glyph{color:#E4D8C6}
+.sp-meta{flex:1;min-width:0}
+.sp-meta .nm{font-weight:700;font-size:.95rem;line-height:1.1}
+.sp-meta .mt{font-size:.74rem;color:var(--muted);font-weight:600}
+.sw{width:48px;height:28px;border-radius:100px;background:var(--bg-soft);border:1px solid var(--line);position:relative;flex:none;transition:.16s}
+.sw::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:var(--good)}
+.sw.on::after{left:23px}
+.sp-detail{border-top:1px solid var(--line-soft);padding:12px;display:none;flex-direction:column;gap:10px}
+.spcard.active .sp-detail{display:flex}
+.flagchips{display:flex;flex-wrap:wrap;gap:6px}
+.fl{font-size:.7rem;font-weight:700;border:1.2px solid var(--line);border-radius:20px;padding:3px 9px;color:var(--muted);background:#fff}
+.fl.on{background:var(--burg);color:#fff;border-color:var(--burg)}
+.sp-detail .mini-label{font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+
+/* builder */
+.steps{display:flex;gap:6px;overflow-x:auto;margin-bottom:18px;padding-bottom:4px}
+.step{flex:none;font-size:.74rem;font-weight:700;color:var(--muted);background:var(--bg-soft);border:1px solid var(--line-soft);
+  padding:7px 12px;border-radius:100px;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.step .num{width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:.64rem;color:var(--muted)}
+.step.done{background:var(--good-bg);color:var(--good);border-color:transparent}
+.step.done .num{background:var(--good);color:#fff;border-color:var(--good)}
+.step.current{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+.step.current .num{background:var(--camel);color:#fff;border-color:var(--camel)}
+.builder-grid{display:grid;grid-template-columns:1fr;gap:18px}
+.preview-stage{position:relative;aspect-ratio:4/5;max-height:62vh;background:linear-gradient(180deg,#fff,var(--bg-soft));
+  border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+.preview-stage img.bagimg{width:78%;height:78%;object-fit:contain;filter:drop-shadow(0 26px 30px rgba(40,35,30,.18))}
+.preview-stage .strap-chip{position:absolute;left:14px;bottom:14px;background:#fff;border:1px solid var(--line);border-radius:14px;
+  padding:8px;display:flex;gap:9px;align-items:center;box-shadow:var(--shadow-sm);max-width:60%}
+.preview-stage .strap-chip img{width:42px;height:42px;border-radius:8px;object-fit:cover}
+.preview-stage .strap-chip .glyph{color:#E4D8C6}
+.preview-stage .strap-chip b{font-size:.82rem;font-weight:700}
+.preview-stage .strap-chip small{display:block;color:var(--muted);font-weight:600;font-size:.7rem}
+.preview-stage .placeholder{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--faint);text-align:center;padding:30px}
+.preview-stage .placeholder .glyph{color:#E7DBC9}
+.preview-stage .placeholder b{font-family:"Fraunces";font-size:1.2rem;color:var(--muted)}
+.preview-stage .photo-pending{position:absolute;top:14px;left:14px;background:var(--warn-bg);color:var(--warn);
+  font-size:.7rem;font-weight:700;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:6px}
+.preview-stage .photo-pending svg{width:13px;height:13px;stroke:var(--warn);fill:none;stroke-width:2}
+.builder-panel{padding:18px}
+.builder-msg{font-family:"Fraunces";font-size:1.15rem;color:var(--charcoal);margin-bottom:4px}
+.builder-sub{color:var(--muted);font-size:.86rem;margin-bottom:16px}
+.opt-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.opt{border:1.4px solid var(--line);background:#fff;border-radius:13px;padding:8px;display:flex;align-items:center;gap:9px;transition:.14s;max-width:100%}
+.opt:hover{border-color:var(--charcoal)}
+.opt.on{border-color:var(--camel);background:var(--camel-bg)}
+.opt .o-th{width:40px;height:40px;border-radius:9px;background:var(--bg-soft);overflow:hidden;flex:none;display:grid;place-items:center}
+.opt .o-th img{width:100%;height:100%;object-fit:cover}
+.opt .o-th .glyph{color:#E4D8C6}
+.opt .o-nm{font-weight:700;font-size:.85rem;line-height:1.05;text-align:left}
+.opt .o-nm small{display:block;color:var(--muted);font-weight:600;font-size:.7rem}
+.price-final{display:flex;align-items:baseline;gap:10px;padding:16px 0;border-top:1px solid var(--line-soft);margin-top:8px}
+.price-final .pf-l{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.price-final .pf-n{font-family:"Fraunces";font-size:2rem;color:var(--charcoal)}
+
+/* combinations */
+.combo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.combo-card{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
+.combo-imgs{display:flex;aspect-ratio:2/1;background:var(--bg-soft)}
+.combo-imgs .ci{flex:1;display:grid;place-items:center;overflow:hidden;position:relative}
+.combo-imgs .ci+.ci{border-left:1px solid var(--line-soft)}
+.combo-imgs .ci img{width:100%;height:100%;object-fit:cover}
+.combo-imgs .ci .glyph{color:#E4D8C6}
+.combo-imgs .ci .tg{position:absolute;bottom:6px;left:6px;font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  background:rgba(255,255,255,.9);color:var(--muted);padding:2px 7px;border-radius:20px}
+.combo-body{padding:14px;display:flex;flex-direction:column;gap:9px;flex:1}
+.combo-body .ctitle{font-family:"Fraunces";font-weight:500;font-size:1.05rem;line-height:1.15}
+.combo-body .ctitle small{color:var(--muted);font-family:"Manrope";font-weight:600;font-size:.8rem;display:block}
+.combo-body .cprice{font-weight:800;font-size:1.05rem}
+.combo-foot{display:flex;gap:7px;flex-wrap:wrap;border-top:1px solid var(--line-soft);padding:11px 14px}
+.combo-foot .btn{flex:1;min-width:0}
+
+/* checklist */
+.chk-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px}
+.chk-group{margin-bottom:18px}
+.chk-group h3{font-size:1.1rem;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.chk-group h3 .cnt{font-size:.74rem;font-weight:700;background:var(--warn-bg);color:var(--warn);padding:2px 10px;border-radius:20px}
+.chk-group h3 .cnt.zero{background:var(--good-bg);color:var(--good)}
+.chk-list{display:flex;flex-direction:column;gap:8px}
+.chk-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid var(--line);border-radius:13px;background:#fff;
+  box-shadow:var(--shadow-sm);font-weight:600;font-size:.9rem}
+.chk-item .dot{width:9px;height:9px;border-radius:50%;background:var(--warn);flex:none}
+.chk-item .badge2{margin-left:auto;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  background:var(--warn-bg);color:var(--warn);padding:3px 9px;border-radius:20px}
+.allgood{padding:30px;text-align:center;border-radius:var(--r);background:var(--good-bg);color:var(--good);font-weight:700}
+
+/* store preview */
+.sp-wrap{display:flex;flex-direction:column;gap:16px}
+.sp-block{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;box-shadow:var(--shadow-sm)}
+.sp-blabel{font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--camel-d);font-weight:700;padding:11px 16px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:.6em;background:var(--bg-soft)}
+.sp-blabel .glyph{color:var(--camel)}
+.sp-pad{padding:16px}
+.mock-hero{aspect-ratio:21/9;border-radius:14px;overflow:hidden;position:relative;display:grid;place-items:center;background:var(--bg-soft)}
+.mock-hero img{width:100%;height:100%;object-fit:cover}
+.mock-hero .ov{position:absolute;inset:0;background:linear-gradient(90deg,rgba(40,35,30,.5),transparent 70%);display:flex;flex-direction:column;justify-content:center;padding:0 7%}
+.mock-hero .ov h3{color:#fff;font-size:clamp(1.1rem,3.5vw,2rem);max-width:16ch}
+.mock-hero .ov p{color:rgba(255,255,255,.85);font-weight:600;font-size:.84rem;margin-top:6px}
+.mock-hero .ov .glyph{color:rgba(255,255,255,.8);margin-bottom:10px}
+.mock-cats{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.mock-cat{flex:none;width:120px}
+.mock-cat .mc-img{aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:var(--bg-soft);display:grid;place-items:center;margin-bottom:7px}
+.mock-cat .mc-img img{width:100%;height:100%;object-fit:cover}
+.mock-cat .mc-img .glyph{color:#E4D8C6}
+.mock-cat b{font-size:.82rem;font-weight:700}
+.mock-cat small{color:var(--muted);font-weight:600;font-size:.72rem;display:block}
+.mock-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.mock-p .mp-img{aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--bg-soft);display:grid;place-items:center;margin-bottom:7px}
+.mock-p .mp-img img{width:100%;height:100%;object-fit:cover}
+.mock-p .mp-img .glyph{color:#E4D8C6}
+.mock-p b{font-size:.82rem;font-weight:700;display:block;line-height:1.1}
+.mock-p small{color:var(--ink-2);font-weight:700;font-size:.8rem}
+.mock-product{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.mock-product .mpr-img{aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:var(--bg-soft);display:grid;place-items:center}
+.mock-product .mpr-img img{width:100%;height:100%;object-fit:cover}
+.mock-product .mpr-img .glyph{color:#E4D8C6}
+.mock-product h3{font-size:1.4rem}
+.mock-ig{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.mock-ig .igc{aspect-ratio:1/1;background:var(--bg-soft);overflow:hidden;display:grid;place-items:center}
+.mock-ig .igc img{width:100%;height:100%;object-fit:cover}
+.mock-ig .igc .glyph{color:#E4D8C6}
+
+/* export */
+.export-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.exp-card{border:1px solid var(--line);border-radius:var(--r);padding:18px;background:#fff;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:10px}
+.exp-card .ei{width:42px;height:42px;border-radius:12px;background:var(--camel-bg);display:grid;place-items:center}
+.exp-card .ei svg{width:21px;height:21px;stroke:var(--camel-d);fill:none;stroke-width:1.8}
+.exp-card h4{font-family:"Fraunces";font-weight:500;font-size:1.05rem}
+.exp-card p{color:var(--muted);font-size:.82rem;margin:0;flex:1}
+.danger-zone{margin-top:26px;border:1px solid var(--bad-bg);border-radius:var(--r);padding:18px;background:var(--bad-bg)}
+.danger-zone h4{color:var(--bad)}
+.danger-zone p{color:#8a3a43;font-size:.84rem;margin:.3em 0 12px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,28px);z-index:300;background:var(--charcoal);color:#fff;
+  padding:13px 22px;border-radius:100px;font-weight:700;font-size:.9rem;box-shadow:var(--shadow);opacity:0;pointer-events:none;
+  transition:.3s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;gap:.6em;max-width:90vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast .glyph{color:var(--camel)}
+.toast.bad{background:var(--bad)}
+
+/* auth gate */
+.authgate{position:fixed;inset:0;z-index:400;background:rgba(40,35,30,.55);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:24px}
+.authgate.show{display:flex}
+.authgate .card-g{background:#fff;border-radius:18px;padding:28px 26px;max-width:360px;text-align:center;box-shadow:var(--shadow)}
+.authgate .glyph{color:var(--burg)}
+.authgate h2{font-size:1.3rem;margin:.4em 0 .2em}
+.authgate p{color:var(--muted);font-size:.9rem;margin:0 0 1.2em}
+
+/* desktop */
+@media(min-width:860px){
+  .shell{grid-template-columns:268px 1fr}
+  .sidebar{position:sticky;top:0;height:100dvh;transform:none}
+  .backdrop{display:none}
+  .hamb{display:none}
+  .view{padding:30px 30px 90px}
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  .builder-grid{grid-template-columns:1fr 1fr}
+  .chk-summary{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:560px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .mock-product{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important}}
+
+/* ===== assistant home ===== */
+.assistant-hero{background:linear-gradient(150deg,#fff,var(--bg-soft));border:1px solid var(--line);border-radius:var(--r-lg);padding:30px 26px;box-shadow:var(--shadow);margin-bottom:22px}
+.assistant-hero h1{font-size:clamp(1.9rem,5.5vw,2.8rem);line-height:1.04;margin:.3em 0 .15em}
+.assistant-hero h1 em{font-style:italic;color:var(--burg)}
+.assistant-hero>p{color:var(--muted);max-width:48ch;font-size:1.02rem}
+.prog-line{display:flex;align-items:center;gap:12px;margin:18px 0 4px}
+.prog-line.big{margin:0 0 18px}
+.prog-bar{flex:1;max-width:300px;height:9px;border-radius:100px;background:var(--bg-soft);border:1px solid var(--line);overflow:hidden}
+.prog-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--camel),var(--burg));transition:.5s}
+.prog-line span{font-size:.78rem;font-weight:700;color:var(--muted)}
+.steps-list{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.step-card{display:flex;align-items:center;gap:16px;padding:18px;border:1.4px solid var(--line);border-radius:var(--r);background:#fff;box-shadow:var(--shadow-sm);text-align:left;transition:.16s;width:100%}
+.step-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--charcoal)}
+.step-card .sc-num{width:44px;height:44px;flex:none;border-radius:50%;background:var(--bg-soft);border:1px solid var(--line);display:grid;place-items:center;font-family:"Fraunces";font-size:1.25rem;color:var(--camel-d)}
+.step-card .sc-num svg{stroke:var(--good)}
+.step-card.done .sc-num{background:var(--good-bg);border-color:transparent}
+.step-card .sc-body{flex:1;min-width:0}
+.step-card .sc-t{display:block;font-family:"Fraunces";font-weight:500;font-size:1.18rem;color:var(--charcoal);line-height:1.12}
+.step-card .sc-d{display:block;color:var(--muted);font-size:.86rem;font-weight:500;margin-top:2px}
+.step-card .sc-side{display:flex;align-items:center;gap:10px;flex:none;color:var(--faint)}
+.step-card .sc-info{font-size:.72rem;font-weight:700;color:var(--muted);background:var(--bg-soft);padding:4px 10px;border-radius:20px;white-space:nowrap}
+.step-card .sc-info.ok{background:var(--good-bg);color:var(--good)}
+.step-card .sc-side svg{stroke:var(--faint);fill:none;stroke-width:2}
+.adv-link{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border:1.4px dashed var(--line);border-radius:var(--r);background:transparent;color:var(--camel-d);font-weight:700;font-size:.9rem;transition:.16s}
+.adv-link:hover{background:var(--bg-soft);border-color:var(--camel)}
+.adv-link svg{stroke:currentColor;fill:none;stroke-width:1.8;width:16px;height:16px}
+
+/* ===== step framing ===== */
+.step-head{margin-bottom:20px}
+.step-eyebrow{display:inline-flex;align-items:center;gap:.5em;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--camel-d);background:var(--camel-bg);padding:5px 12px;border-radius:100px}
+.step-eyebrow .glyph{color:var(--camel)}
+.step-head h1{font-size:clamp(1.6rem,4.6vw,2.3rem);line-height:1.06;margin:.34em 0 .12em}
+.prog-dots{display:flex;gap:7px;margin-top:14px}
+.prog-dots .pd{width:30px;height:6px;border-radius:100px;background:var(--bg-soft);border:1px solid var(--line)}
+.prog-dots .pd.on{background:var(--camel)}
+.prog-dots .pd.done{background:var(--burg)}
+.step-foot{display:flex;justify-content:space-between;gap:12px;margin-top:26px;padding-top:20px;border-top:1px solid var(--line-soft)}
+
+/* ===== advanced collapsibles ===== */
+.ghint{color:var(--muted);font-size:.84rem;margin:-2px 0 14px}
+.adv-toggle{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;padding:11px;margin-top:8px;border:1.4px dashed var(--line);border-radius:13px;background:transparent;color:var(--camel-d);font-weight:700;font-size:.86rem;transition:.16s}
+.adv-toggle.big{margin-top:18px;padding:14px}
+.adv-toggle:hover{background:var(--bg-soft);border-color:var(--camel)}
+.adv-toggle svg{stroke:currentColor;fill:none;stroke-width:2;transition:.2s}
+.adv-toggle.open svg{transform:rotate(45deg)}
+.adv-body{display:none;margin-top:14px}
+.adv-body.open{display:block}
+
+/* ===== guided photos list ===== */
+.guide-list{display:flex;flex-direction:column;gap:10px}
+.guide-item{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--shadow-sm)}
+.guide-item .gi-th{width:54px;height:54px;border-radius:11px;background:var(--bg-soft);overflow:hidden;flex:none;display:grid;place-items:center}
+.guide-item .gi-th img{width:100%;height:100%;object-fit:cover}
+.guide-item .gi-th .glyph{color:#E4D8C6}
+.guide-item .gi-body{flex:1;min-width:0}
+.guide-item .gi-body b{font-weight:700;font-size:.95rem;display:block;line-height:1.1}
+.guide-item .gi-body small{color:var(--muted);font-weight:600;font-size:.76rem}
+.guide-item .gi-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="backdrop" id="backdrop" data-act="closeNav"></div>
+  <div class="main">
+    <div class="topbar">
+      <button class="hamb" data-act="openNav" aria-label="Menú"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div>
+        <div class="tb-title" id="tbTitle">Inicio</div>
+        <div class="tb-sub" id="tbSub">Taluna · Organizador</div>
+      </div>
+      <div class="tb-spacer"></div>
+      <span class="saved-flash" id="savedFlash">Guardado ✓</span>
+    </div>
+    <div class="view" id="view"></div>
+  </div>
+</div>
+<input type="file" id="filePick" accept="image/*" hidden>
+<div class="toast" id="toast"><span class="glyph" id="toastGlyph"></span><span id="toastMsg"></span></div>
+<div class="authgate" id="authgate">
+  <div class="card-g">
+    <span class="glyph" id="authGlyph"></span>
+    <h2 class="fr">Inicia sesión para continuar</h2>
+    <p>Tu sesión no está activa. Entra con tu cuenta para que todo se guarde en la nube.</p>
+    <a class="btn primary" href="/login">Iniciar sesión</a>
+  </div>
+</div>
+<script>
+"use strict";
+/* ===================== Taluna · Organizador ===================== */
+
+/* ---- brand glyph ---- */
+const GS = (s)=>`<svg width="${s}" height="${Math.round(s*1.32)}" viewBox="0 0 48 64" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 60V30"/><path d="M3 35l6-8 6 8"/><path d="M3.5 44l5.5-7 5.5 7"/><path d="M24 60V13"/><path d="M16.5 23l7.5-10 7.5 10"/><path d="M17 33l7-9 7 9"/><path d="M39 60V37"/><path d="M33 43l6-8 6 8"/></svg>`;
+const ICONS={
+ home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',
+ bag:'<path d="M6 8h12l1 12H5L6 8zM9 8a3 3 0 0 1 6 0"/>',
+ strap:'<path d="M4 7c4 0 4 10 8 10s4-10 8-10"/>',
+ belt:'<path d="M3 9h18v6H3zM9 9v6M12 10h3v4h-3z"/>',
+ link:'<path d="M10 8H7a4 4 0 0 0 0 8h3M14 8h3a4 4 0 0 1 0 8h-3M9 12h6"/>',
+ wand:'<path d="M5 19L15 9M14 3.5l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8zM19.5 11l.5 1 1 .5-1 .5-.5 1-.5-1-1-.5 1-.5z"/>',
+ layers:'<path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 16.5l9 5 9-5"/>',
+ camera:'<path d="M3 8h4l2-2h6l2 2h4v11H3zM12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>',
+ store:'<path d="M4 9l1-5h14l1 5M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>',
+ download:'<path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ alert:'<path d="M12 8v5M12 16v.5M10.3 4l-7 12a2 2 0 0 0 1.7 3h14a2 2 0 0 0 1.7-3l-7-12a2 2 0 0 0-3.4 0z"/>',
+ trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+ edit:'<path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/>',
+ check:'<path d="M5 12l5 5L20 6"/>',
+ image:'<path d="M4 5h16v14H4zM4 15l4-4 5 5M14 13l2-2 4 4M9 9a1.5 1.5 0 1 0 0-.01"/>',
+ file:'<path d="M6 3h8l4 4v14H6zM14 3v4h4"/>',
+ sheet:'<path d="M5 3h14v18H5zM5 9h14M5 15h14M11 3v18"/>',
+ wa:'<path d="M4 20l1.5-4A8 8 0 1 1 9 19.5L4 20z"/>',
+ chev:'<path d="M9 6l6 6-6 6"/>',
+ cloud:'<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18H7z"/>'
+};
+const ic=(n,sz=18)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
+
+/* ---- state ---- */
+let state={bags:[],straps:[],belts:[],compat:{},combos:[],meta:{created:Date.now()},images:{}};
+let imgCache={};        // imageId -> URL pública (o dataURL si todavía no se sube)
+let route='inicio';
+let builder={bagId:null,strapId:null};
+let filter={bolsas:'all',straps:'all',cinturones:'all',combinaciones:'all'};
+let compatBag=null;
+let editing=null;       // {type, id, isNew}
+let pendingPhoto=null;  // {type,id,slot}
+
+const uid=()=>'id'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const esc=s=>(s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escA=s=>(s==null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const money=n=>{const v=parseFloat(n);return isNaN(v)?'—':'$'+v.toLocaleString('es-MX');};
+const $=(s,c=document)=>c.querySelector(s);
+const $$=(s,c=document)=>[...c.querySelectorAll(s)];
+
+/* ===================== PERSISTENCIA: nube (Supabase) + cache local ===================== */
+const LS='taluna_studio_v1';
+const API={state:'/api/studio/state',image:'/api/studio/image'};
+let cloudOK=true;          // backend alcanzable y con sesión
+let cloudT, saveT;         // timers de guardado
+
+function setSync(kind){
+  const f=$('#savedFlash'); if(!f)return;
+  const map={
+    saving:['Guardando…',0],
+    saved:['Guardado ✓ en la nube',0],
+    offline:['Sin conexión · guardado en este equipo',1],
+    auth:['Inicia sesión para guardar',1]
+  };
+  const m=map[kind]; if(!m)return;
+  f.textContent=m[0]; f.classList.add('show'); f.classList.toggle('warn-flash',!!m[1]);
+  clearTimeout(saveT);
+  if(kind==='saved')saveT=setTimeout(()=>f.classList.remove('show'),1400);
+}
+
+function stateForSave(){return {bags:state.bags,straps:state.straps,belts:state.belts,compat:state.compat,combos:state.combos,meta:state.meta,images:state.images};}
+const isUrl=v=>typeof v==='string'&&/^https?:\/\//.test(v);
+function cloudImages(){const o={};for(const k in state.images){if(isUrl(state.images[k]))o[k]=state.images[k];}return o;}
+function cloudPayload(){return {bags:state.bags,straps:state.straps,belts:state.belts,compat:state.compat,combos:state.combos,meta:state.meta,images:cloudImages()};}
+
+function saveState(flash=true){
+  try{localStorage.setItem(LS,JSON.stringify(stateForSave()));}catch(e){}
+  scheduleCloudSave();
+}
+const saveDebounced=(()=>{let t;return()=>{clearTimeout(t);t=setTimeout(()=>saveState(true),300);};})();
+
+function scheduleCloudSave(){clearTimeout(cloudT);setSync('saving');cloudT=setTimeout(cloudSaveState,700);}
+
+async function cloudSaveState(){
+  try{
+    const res=await fetch(API.state,{method:'PUT',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify({data:cloudPayload()})});
+    if(res.status===401||res.redirected){cloudOK=false;setSync('auth');showAuthGate();return false;}
+    if(!res.ok){cloudOK=false;setSync('offline');return false;}
+    cloudOK=true;setSync('saved');return true;
+  }catch(e){cloudOK=false;setSync('offline');return false;}
+}
+async function cloudLoadState(){
+  try{
+    const res=await fetch(API.state,{headers:{'accept':'application/json'},credentials:'same-origin'});
+    if(res.status===401||res.redirected){cloudOK=false;return {auth:false};}
+    if(!res.ok){cloudOK=false;return {offline:true};}
+    const j=await res.json();cloudOK=true;return {data:j.data||null};
+  }catch(e){cloudOK=false;return {offline:true};}
+}
+
+function dataURLtoBlob(d){const i=d.indexOf(',');const head=d.slice(0,i);const b64=d.slice(i+1);const mime=(head.match(/:(.*?);/)||[])[1]||'image/jpeg';const bin=atob(b64);const u=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)u[j]=bin.charCodeAt(j);return new Blob([u],{type:mime});}
+
+async function cloudUploadImage(dataURL,id){
+  const blob=dataURLtoBlob(dataURL);
+  const fd=new FormData();fd.append('id',id);fd.append('file',blob,id+'.jpg');
+  const res=await fetch(API.image,{method:'POST',credentials:'same-origin',body:fd});
+  if(res.status===401||res.redirected){cloudOK=false;showAuthGate();throw new Error('auth');}
+  if(!res.ok)throw new Error('upload');
+  return await res.json(); // {id,url,path}
+}
+
+// Sube las fotos que quedaron pendientes (guardadas como dataURL local).
+async function flushPending(){
+  if(!cloudOK)return;
+  const ids=Object.keys(state.images).filter(k=>!isUrl(state.images[k]));
+  let changed=false;
+  for(const id of ids){
+    try{const up=await cloudUploadImage(state.images[id],id);state.images[id]=up.url;imgCache[id]=up.url;changed=true;}
+    catch(e){break;}
+  }
+  if(changed)saveState(false);
+}
+
+function showAuthGate(){const g=$('#authgate');if(g){g.classList.add('show');const ag=$('#authGlyph');if(ag&&!ag.innerHTML)ag.innerHTML=GS(26);}}
+
+function loadStateLocal(){try{const r=JSON.parse(localStorage.getItem(LS));if(r){applyState(r);return true;}}catch(e){}return false;}
+function applyState(r){
+  state.bags=r.bags||[];state.straps=r.straps||[];state.belts=r.belts||[];
+  state.compat=r.compat||{};state.combos=r.combos||[];state.meta=r.meta||state.meta;
+  state.images=r.images||{};
+}
+function rebuildImgCache(){imgCache={};for(const k in state.images)imgCache[k]=state.images[k];}
+
+/* ---- option lists & schemas ---- */
+const O={
+ bagSize:['Mini','Chica','Mediana','Grande','Celular','Otro'],
+ use:['Diario','Evento','Viaje','Noche','Celular','Casual','Elegante'],
+ bagStatus:['Activa','Oculta','Agotada','Próximamente'],
+ bagTags:['Nueva','Oferta','Más vendida','Recomendada'],
+ strapType:['Chiapas','Huichol','Shakria','Ancho','Delgado','Celular','Otros'],
+ leather:['Camel','Negro','Beige','Café','Gris','Otro'],
+ length:['Corto','Mediano','Largo','Ajustable'],
+ strapFor:['Bolsa','Celular','Cinturón'],
+ strapStatus:['Activo','Oculto','Agotado','Próximamente'],
+ strapTags:['Nuevo','Oferta','Más vendido','Recomendado'],
+ beltType:['Shakria','Ancho','Delgado','Otros']
+};
+const SCHEMA={
+ bag:[
+  {k:'name',l:'Nombre de la bolsa',t:'text',req:1,ph:'Ej. Tacaná',full:1},
+  {k:'descShort',l:'Descripción corta',t:'text',ph:'Una frase que la describa',full:1},
+  {k:'color',l:'Color de la bolsa',t:'text',ph:'Ej. Vino'},
+  {k:'size',l:'Tamaño',t:'select',o:O.bagSize},
+  {k:'basePrice',l:'Precio',t:'price'},
+  {k:'stock',l:'Stock disponible',t:'num'},
+  {k:'status',l:'Estado',t:'select',o:O.bagStatus},
+  {k:'descLong',l:'Descripción larga',t:'textarea',ph:'Cuenta más sobre esta bolsa…',full:1,adv:1},
+  {k:'category',l:'Categoría',t:'text',ph:'Ej. Bolsa de mano',adv:1},
+  {k:'useType',l:'Tipo de uso',t:'mc',o:O.use,full:1,adv:1},
+  {k:'profile',l:'Perfil recomendado',t:'text',ph:'Opcional',full:1,adv:1},
+  {k:'dimH',l:'Alto (cm)',t:'num',adv:1},{k:'dimW',l:'Ancho (cm)',t:'num',adv:1},{k:'dimD',l:'Profundidad (cm)',t:'num',adv:1},
+  {k:'weight',l:'Peso aprox. (g)',t:'num',adv:1},
+  {k:'material',l:'Material',t:'text',ph:'Ej. Piel de grano',adv:1},
+  {k:'hardware',l:'Herrajes',t:'text',ph:'Ej. Mosquetón',adv:1},
+  {k:'hardwareColor',l:'Color de herrajes',t:'text',ph:'Ej. Plata',adv:1},
+  {k:'sku',l:'Código interno',t:'text',ph:'Opcional',adv:1},
+  {k:'tags',l:'Etiquetas',t:'mc',o:O.bagTags,full:1,adv:1},
+  {k:'notes',l:'Notas internas',t:'textarea',ph:'Solo para el equipo',full:1,adv:1}
+ ],
+ strap:[
+  {k:'name',l:'Nombre del strap',t:'text',req:1,ph:'Ej. Huichol camel',full:1},
+  {k:'type',l:'Tipo',t:'select',o:O.strapType},
+  {k:'colorMain',l:'Color principal',t:'text'},
+  {k:'leatherBase',l:'Base de piel',t:'select',o:O.leather},
+  {k:'price',l:'Precio',t:'price'},
+  {k:'stock',l:'Stock disponible',t:'num'},
+  {k:'status',l:'Estado',t:'select',o:O.strapStatus},
+  {k:'pattern',l:'Diseño / patrón',t:'text',ph:'Ej. Rombos',adv:1},
+  {k:'colorsSecondary',l:'Colores secundarios',t:'text',ph:'Separados por coma',adv:1},
+  {k:'forType',l:'Es para',t:'select',o:O.strapFor,adv:1},
+  {k:'length',l:'Largo',t:'select',o:O.length,adv:1},
+  {k:'width',l:'Ancho (cm)',t:'num',adv:1},
+  {k:'material',l:'Material',t:'text',ph:'Ej. Chaquira / hilo',adv:1},
+  {k:'hardwareCompat',l:'Herraje compatible',t:'text',ph:'Ej. Mosquetón plata',adv:1},
+  {k:'sku',l:'Código interno',t:'text',ph:'Opcional',adv:1},
+  {k:'tags',l:'Etiquetas',t:'mc',o:O.strapTags,full:1,adv:1},
+  {k:'notes',l:'Notas internas',t:'textarea',full:1,adv:1}
+ ],
+ belt:[
+  {k:'name',l:'Nombre del cinturón',t:'text',req:1,full:1},
+  {k:'type',l:'Tipo',t:'select',o:O.beltType},
+  {k:'colorMain',l:'Color principal',t:'text'},
+  {k:'price',l:'Precio',t:'price'},
+  {k:'stock',l:'Stock disponible',t:'num'},
+  {k:'status',l:'Estado',t:'select',o:O.strapStatus},
+  {k:'colorsSecondary',l:'Colores secundarios',t:'text',adv:1},
+  {k:'size',l:'Talla',t:'text',ph:'Ej. M / 90cm',adv:1},
+  {k:'length',l:'Largo (cm)',t:'num',adv:1},
+  {k:'width',l:'Ancho (cm)',t:'num',adv:1},
+  {k:'sku',l:'Código interno',t:'text',adv:1},
+  {k:'tags',l:'Etiquetas',t:'mc',o:O.strapTags,full:1,adv:1},
+  {k:'notes',l:'Notas internas',t:'textarea',full:1,adv:1}
+ ]
+};
+const PHOTOS={
+ bag:['Fondo blanco · frontal','Fondo blanco · 3/4','Fondo blanco · lateral','Fondo blanco · trasera','En modelo · frontal','En modelo · lateral','En modelo · de espaldas','Close-up piel','Close-up logo','Close-up herrajes','Tamaño en persona','Lifestyle','Video o link'],
+ strap:['Fondo blanco','Enrollado','Extendido completo','Close-up tejido','Close-up terminales','Puesto en bolsa','Puesto en modelo','Lifestyle','Instagram Shopping','Video o link'],
+ belt:['Fondo blanco','Puesto en modelo','Close-up tejido','Close-up hebilla','Lifestyle']
+};
+const VIDEO_SLOTS=['Video o link'];
+const ROLES=['Principal','Catálogo','Detalle','Hero/Banner','Arma tu Taluna','Instagram Shopping'];
+const REQUIRED={bag:['Fondo blanco · frontal','En modelo · frontal','Tamaño en persona'],strap:['Close-up tejido','Puesto en bolsa'],belt:['Fondo blanco','Puesto en modelo']};
+const TYPE_LABEL={bag:'bolsa',strap:'strap',belt:'cinturón'};
+const TYPE_LABEL_PL={bag:'Bolsas',strap:'Straps',belt:'Cinturones'};
+const collOf=t=>t==='bag'?state.bags:t==='strap'?state.straps:state.belts;
+
+function blank(type){
+  const o={id:uid(),type,photos:{},photoRoles:{},video:'',created:Date.now()};
+  SCHEMA[type].forEach(f=>{if(f.g)return;o[f.k]=(f.t==='mc')?[]:'';});
+  o.status=type==='bag'?'Activa':'Activo';
+  return o;
+}
+function seed(){
+  ['Tacaná','Maraica','Taúu','Luna','Maraica Mini','Mauu de celular'].forEach(n=>{
+    const b=blank('bag');b.name=n;
+    if(n==='Maraica Mini')b.size='Mini';if(n==='Mauu de celular')b.size='Celular';
+    state.bags.push(b);
+  });
+  saveState(false);
+}
+
+/* ---- image helpers ---- */
+function fileToDataURL(file,max=1100,q=0.85){return new Promise((res,rej)=>{
+  const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{
+    let{width:w,height:h}=img;if(Math.max(w,h)>max){const s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+    const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+    try{res(c.toDataURL('image/jpeg',q));}catch(e){res(fr.result);}
+  };img.onerror=()=>res(fr.result);img.src=fr.result;};fr.onerror=rej;fr.readAsDataURL(file);});}
+
+function pImg(p){ // imagen principal de un producto
+  if(!p)return null;
+  const slots=Object.keys(p.photos||{});
+  for(const s of slots){const r=p.photoRoles[s]||[];if(r.includes('Principal')&&imgCache[p.photos[s]])return imgCache[p.photos[s]];}
+  const pref=['Fondo blanco · frontal','Fondo blanco','Fondo blanco · 3/4'];
+  for(const s of pref){if(p.photos[s]&&imgCache[p.photos[s]])return imgCache[p.photos[s]];}
+  for(const s of slots){if(s!=='Video o link'&&imgCache[p.photos[s]])return imgCache[p.photos[s]];}
+  return null;
+}
+const photoCount=p=>Object.keys(p.photos||{}).filter(s=>s!=='Video o link'&&p.photos[s]).length;
+
+/* ---- completeness / missing ---- */
+function bagIncomplete(b){return !b.name||!b.basePrice||!b.descShort||photoCount(b)===0;}
+function prodMissing(p,type){
+  const miss=[];
+  REQUIRED[type].forEach(slot=>{if(!p.photos[slot])miss.push({kind:'foto',label:`${p.name||'(sin nombre)'} — falta ${slot.toLowerCase()}`,group:TYPE_LABEL_PL[type]});});
+  const price=type==='bag'?p.basePrice:p.price;
+  if(!price)miss.push({kind:'precio',label:`${p.name||'(sin nombre)'} — falta precio`,group:'Sin precio'});
+  if(p.stock===''||p.stock==null)miss.push({kind:'stock',label:`${p.name||'(sin nombre)'} — falta stock`,group:'Sin stock'});
+  if(type==='bag'&&!p.descShort)miss.push({kind:'desc',label:`${p.name||'(sin nombre)'} — falta descripción`,group:'Sin descripción'});
+  return miss;
+}
+function comboName(c){const b=byId('bag',c.bagId),s=byId('strap',c.strapId);return `${b?b.name:'(bolsa)'} + ${s?s.name:'(strap)'}`;}
+function comboImg(c){if(c.photoId&&imgCache[c.photoId])return imgCache[c.photoId];return null;}
+function comboStatus(c){
+  const b=byId('bag',c.bagId),s=byId('strap',c.strapId);
+  if(!b||!s)return{key:'bad',label:'Incompleta'};
+  if(!c.finalPrice)return{key:'warn',label:'Falta precio'};
+  if((b.stock===''||b.stock==null)||(s.stock===''||s.stock==null))return{key:'warn',label:'Falta stock'};
+  if(!comboImg(c)&&!pImg(b))return{key:'warn',label:'Falta foto'};
+  return{key:'good',label:'Completa'};
+}
+function allMissing(){
+  const out=[];
+  state.bags.forEach(b=>out.push(...prodMissing(b,'bag')));
+  state.straps.forEach(s=>out.push(...prodMissing(s,'strap')));
+  state.belts.forEach(b=>out.push(...prodMissing(b,'belt')));
+  state.combos.forEach(c=>{if(!comboImg(c))out.push({kind:'foto',label:`Falta foto de combinación: ${comboName(c)}`,group:'Combinaciones'});});
+  return out;
+}
+function byId(type,id){return collOf(type).find(x=>x.id===id);}
+function metaText(p,type){
+  let parts;
+  if(type==='bag')parts=[p.category,p.color,p.size];
+  else if(type==='strap')parts=[p.type,p.colorMain||p.leatherBase];
+  else parts=[p.type,p.colorMain];
+  const s=parts.filter(Boolean).join(' · ');
+  return s||{bag:'Bolsa',strap:'Strap',belt:'Cinturón'}[type];
+}
+
+function stats(){
+  const inc=state.bags.filter(bagIncomplete).length+state.straps.filter(s=>!s.name||!s.price).length+state.belts.filter(b=>!b.name||!b.price).length;
+  const missFotos=allMissing().filter(m=>m.kind==='foto').length;
+  return{
+    bags:state.bags.length,straps:state.straps.length,belts:state.belts.length,combos:state.combos.length,
+    incompletos:inc,fotos:missFotos,
+    combosSinPrecio:state.combos.filter(c=>!c.finalPrice).length,
+    combosSinFoto:state.combos.filter(c=>!comboImg(c)).length,
+    missTotal:allMissing().length
+  };
+}
+
+/* ===================== NAV ===================== */
+const NAV=[
+ {id:'inicio',l:'Inicio',i:'home'},
+ {sep:'Paso por paso'},
+ {id:'bolsas',l:'1 · Bolsas',i:'bag',c:()=>state.bags.length},
+ {id:'straps',l:'2 · Straps',i:'strap',c:()=>state.straps.length},
+ {id:'fotos',l:'3 · Subir fotos',i:'camera',c:()=>stats().fotos,alert:1},
+ {id:'combinaciones',l:'4 · Combinaciones',i:'layers',c:()=>state.combos.length},
+ {id:'pendientes',l:'5 · Qué falta',i:'check',c:()=>stats().missTotal,alert:1},
+ {sep:'Avanzado'},
+ {id:'compatibilidades',l:'Compatibilidades',i:'link'},
+ {id:'cinturones',l:'Cinturones',i:'belt',c:()=>state.belts.length},
+ {id:'constructor',l:'Arma tu Taluna',i:'wand'},
+ {id:'tienda',l:'Vista previa tienda',i:'store'},
+ {id:'exportar',l:'Exportar información',i:'download'}
+];
+const TITLE={inicio:'Inicio',bolsas:'Bolsas',straps:'Straps',fotos:'Subir fotos',combinaciones:'Combinaciones',pendientes:'Qué falta',compatibilidades:'Compatibilidades',cinturones:'Cinturones',constructor:'Arma tu Taluna',tienda:'Vista previa de tienda',exportar:'Exportar información'};
+function renderNav(){
+  const s=$('#sidebar');
+  let h=`<div class="brand"><span class="glyph">${GS(26)}</span><div><b>Taluna</b><small>Organizador</small></div></div><nav class="nav">`;
+  NAV.forEach(n=>{
+    if(n.sep){h+=`<div class="nav-sep">${n.sep}</div>`;return;}
+    const cnt=n.c?n.c():null;
+    const badge=cnt!=null?`<span class="cnt ${n.alert&&cnt>0?'alert':''}">${cnt}</span>`:'';
+    h+=`<button class="nav-item ${route===n.id?'active':''}" data-act="go" data-route="${n.id}"><span class="ico">${ic(n.i)}</span>${n.l}${badge}</button>`;
+  });
+  h+=`</nav><div class="rail-foot"><div class="save-dot"><i></i> Todo se guarda en la nube</div><a class="back" href="/">${ic('chev')} Volver al panel</a></div>`;
+  s.innerHTML=h;
+}
+
+/* ===================== RENDER ROUTER ===================== */
+function render(){
+  renderNav();
+  $('#tbTitle').textContent=TITLE[route]||'Taluna';
+  const v=$('#view');v.scrollTop=0;
+  const fn={inicio:vInicio,bolsas:()=>vProducts('bag'),straps:()=>vProducts('strap'),cinturones:()=>vProducts('belt'),compatibilidades:vCompat,constructor:vBuilder,combinaciones:vCombos,fotos:vFotosGuided,pendientes:vPendientes,tienda:vTienda,exportar:vExport}[route];
+  v.innerHTML=fn?fn():'';
+  window.scrollTo(0,0);
+}
+function go(r){route=r;render();$('#sidebar').classList.remove('open');$('#backdrop').classList.remove('show');}
+
+/* ---------- INICIO (asistente) ---------- */
+function vInicio(){
+  const st=stats();
+  const steps=[
+    {n:1,r:'bolsas',t:'Agregar bolsas',d:'Registra cada bolsa con su precio y color.',done:st.bags>0,info:st.bags+' bolsa'+(st.bags===1?'':'s')},
+    {n:2,r:'straps',t:'Agregar straps compatibles',d:'Sube tus straps y marca con qué bolsas combinan.',done:st.straps>0,info:st.straps+' strap'+(st.straps===1?'':'s')},
+    {n:3,r:'fotos',t:'Subir fotos necesarias',d:'Completa las fotos que faltan de cada producto.',done:st.fotos===0&&(st.bags+st.straps)>0,info:st.fotos?st.fotos+' por subir':'al día'},
+    {n:4,r:'combinaciones',t:'Revisar combinaciones',d:'Arma y revisa las combinaciones de bolsa y strap.',done:state.combos.some(c=>c.ready),info:st.combos+(st.combos===1?' combinación':' combinaciones')},
+    {n:5,r:'pendientes',t:'Ver qué falta',d:'Una lista clara de todo lo que queda pendiente.',done:st.missTotal===0&&st.bags>0,info:st.missTotal?st.missTotal+' pendiente'+(st.missTotal===1?'':'s'):'todo listo'}
+  ];
+  const doneN=steps.filter(s=>s.done).length;
+  const stepCards=steps.map(s=>`
+    <button class="step-card ${s.done?'done':''}" data-act="go" data-route="${s.r}">
+      <span class="sc-num">${s.done?ic('check',20):s.n}</span>
+      <span class="sc-body"><span class="sc-t">${s.t}</span><span class="sc-d">${s.d}</span></span>
+      <span class="sc-side"><span class="sc-info ${s.done?'ok':''}">${s.info}</span>${ic('chev',16)}</span>
+    </button>`).join('');
+  return `
+  <div class="assistant-hero">
+    <span class="eyebrow"><span class="glyph">${GS(15)}</span> Asistente Taluna</span>
+    <h1 class="fr">Vamos a ordenar Taluna<br><em>paso por paso</em></h1>
+    <p>Sigue estos cinco pasos sin prisa. Todo se va guardando solo en la nube, y lo puedes llenar desde tu celular.</p>
+    <div class="prog-line"><div class="prog-bar"><i style="width:${doneN/steps.length*100}%"></i></div><span>${doneN} de ${steps.length} pasos</span></div>
+    <div class="quick-row">
+      <button class="btn primary" data-act="go" data-route="bolsas">${ic('bag',16)} Empezar con bolsas</button>
+      <button class="btn camel" data-act="go" data-route="straps">${ic('strap',16)} Agregar straps</button>
+      <button class="btn" data-act="go" data-route="constructor">${ic('wand',16)} Crear combinaciones</button>
+      <button class="btn ghost" data-act="go" data-route="pendientes">${ic('camera',16)} Ver fotos faltantes</button>
+    </div>
+  </div>
+  <div class="steps-list">${stepCards}</div>
+  <button class="adv-link" data-act="go" data-route="exportar">${ic('download',15)} ¿Ya terminaste? Exporta toda la información</button>`;
+}
+/* step header + footer wrapper */
+function stepWrap(n,title,intro,body,nextRoute,nextLabel){
+  const dots=Array.from({length:5}).map((_,i)=>`<span class="pd ${i+1===n?'on':i+1<n?'done':''}"></span>`).join('');
+  const foot=nextRoute?`<div class="step-foot"><button class="btn ghost" data-act="go" data-route="inicio">${ic('home',15)} Inicio</button><button class="btn primary" data-act="go" data-route="${nextRoute}">${nextLabel} ${ic('chev',15)}</button></div>`:'';
+  return `<div class="step-head"><span class="step-eyebrow"><span class="glyph">${GS(14)}</span> Paso ${n} de 5</span><h1 class="fr">${title}</h1><p class="intro">${intro}</p><div class="prog-dots">${dots}</div></div>${body}${foot}`;
+}
+
+/* ---------- PRODUCTS LIST (bag/strap/belt) ---------- */
+function vProducts(type){
+  const coll=collOf(type);
+  const f=filter[{bag:'bolsas',strap:'straps',belt:'cinturones'}[type]];
+  const statusOpts=type==='bag'?O.bagStatus:O.strapStatus;
+  let list=coll.slice();
+  if(f==='incomplete')list=list.filter(p=>type==='bag'?bagIncomplete(p):(!p.name||!p.price||photoCount(p)===0));
+  else if(f!=='all')list=list.filter(p=>(p.status||'')===f);
+  const addLabel={bag:'bolsa',strap:'strap',belt:'cinturón'}[type];
+  const chips=['all','incomplete',...statusOpts].map(s=>{
+    const lab=s==='all'?'Todas':s==='incomplete'?'Incompletas':s;
+    return `<button class="fchip ${f===s?'on':''}" data-act="filter" data-scope="${{bag:'bolsas',strap:'straps',belt:'cinturones'}[type]}" data-val="${s}">${lab}</button>`;
+  }).join('');
+  let cards=list.map(p=>prodCard(p,type)).join('');
+  const addCard=`<button class="add-card" data-act="add" data-type="${type}"><div><div class="plus">${ic('plus',22)}</div>Agregar ${addLabel}</div></button>`;
+  const body=`<div class="filterbar">${chips}</div><div class="prod-grid">${cards}${addCard}</div>`;
+  const stepInfo={bag:{n:1,title:'Agrega tus bolsas',intro:'Toca "Agregar bolsa" y llena lo esencial. Puedes subir fotos ahora o en el paso 3.',next:'straps',nextL:'Siguiente: straps'},
+                  strap:{n:2,title:'Agrega tus straps',intro:'Registra cada strap y, al abrirlo, marca con qué bolsas combina. Solo esos se mostrarán juntos al cliente.',next:'fotos',nextL:'Siguiente: fotos'}}[type];
+  if(stepInfo)return stepWrap(stepInfo.n,stepInfo.title,stepInfo.intro,body,stepInfo.next,stepInfo.nextL);
+  return `
+  <div class="view-head">
+    <span class="eyebrow"><span class="glyph">${GS(15)}</span> ${TYPE_LABEL_PL[type]}</span>
+    <h1 class="fr">${TYPE_LABEL_PL[type]}</h1>
+    <p class="intro">Agrega cada ${addLabel} con su información y sus fotos. Toca una tarjeta para editarla.</p>
+  </div>${body}`;
+}
+function prodCard(p,type){
+  const img=pImg(p);
+  const price=type==='bag'?p.basePrice:p.price;
+  const pc=photoCount(p);
+  const inc=type==='bag'?bagIncomplete(p):(!p.name||!p.price||pc===0);
+  const tags=(p.tags||[]).slice(0,2).map(t=>`<span class="pill tag">${esc(t)}</span>`).join('');
+  const stCls=(p.status||'').toLowerCase().replace('ó','o').replace('á','a');
+  return `<div class="prod-card" data-act="edit" data-type="${type}" data-id="${p.id}">
+    <div class="prod-thumb">
+      ${img?`<img src="${img}" alt="">`:`<div class="ph"><span class="glyph">${GS(26)}</span><span>Sin foto</span></div>`}
+      <div class="pcount">${ic('camera',12)} ${pc}</div>
+    </div>
+    <div class="prod-body">
+      <div class="nm">${esc(p.name)||'<span style="color:var(--faint)">Sin nombre</span>'}</div>
+      <div class="meta">${esc(metaText(p,type))}${price?' · '+money(price):''}</div>
+      <div class="pill-row">
+        ${p.status?`<span class="pill ${stCls}">${esc(p.status)}</span>`:''}
+        ${tags}
+        ${inc?`<span class="pill incomplete">Incompleto</span>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- EDITOR ---------- */
+function openEditor(type,id){
+  let p,isNew=false;
+  if(id){p=byId(type,id);}else{p=blank(type);collOf(type).push(p);isNew=true;saveState(false);}
+  editing={type,id:p.id,isNew};
+  let host=$('#editorHost');
+  if(!host){host=document.createElement('div');host.id='editorHost';document.body.appendChild(host);}
+  host.innerHTML=editorHTML(p,type);
+  requestAnimationFrame(()=>$('.editor').classList.add('show'));
+  document.body.style.overflow='hidden';
+}
+function editorHTML(p,type){
+  const ess=SCHEMA[type].filter(f=>!f.adv);
+  const adv=SCHEMA[type].filter(f=>f.adv);
+  const essHTML=`<div class="fgroup"><div class="grid2">${ess.map(f=>fieldHTML(f,p)).join('')}</div></div>`;
+  const reqSlots=PHOTOS[type].filter(s=>REQUIRED[type].includes(s));
+  const moreSlots=PHOTOS[type].filter(s=>!REQUIRED[type].includes(s));
+  const photoHTML=`<div class="fgroup"><div class="gh"><span class="glyph">${GS(13)}</span>Fotos principales</div>
+     <p class="ghint">Toca cada espacio para subir una foto desde tu dispositivo.</p>
+     <div class="photo-grid">${reqSlots.map(slot=>photoSlotHTML(p,type,slot)).join('')}</div>
+     <button type="button" class="adv-toggle" data-act="toggleMore">${ic('plus',15)} Más ángulos y fotos (opcional)</button>
+     <div class="adv-body" id="morePhotos"><div class="photo-grid">${moreSlots.map(slot=>photoSlotHTML(p,type,slot)).join('')}</div></div></div>`;
+  let compatHTML='';
+  if(type==='strap'){
+    const chips=state.bags.length
+      ? state.bags.map(b=>{const on=getRuleRead(b.id,p.id).compatible;return `<button type="button" class="mc ${on?'on':''}" data-act="quickCompat" data-bag="${b.id}" data-strap="${p.id}">${esc(b.name)||'Sin nombre'}</button>`;}).join('')
+      : '<small style="color:var(--muted)">Agrega bolsas primero para marcar con cuáles combina.</small>';
+    compatHTML=`<div class="fgroup"><div class="gh"><span class="glyph">${GS(13)}</span>¿Con qué bolsas combina?</div>
+      <p class="ghint">Marca las bolsas con las que se ve bien. Solo esas se mostrarán juntas al cliente.</p>
+      <div class="multichip">${chips}</div></div>`;
+  }
+  const advHTML=`<button type="button" class="adv-toggle big" data-act="toggleAdv">${ic('plus',16)} Detalles técnicos (opcional)</button>
+     <div class="adv-body" id="advBody"><p class="ghint">Información extra para el catálogo. No es obligatoria para empezar.</p><div class="grid2">${adv.map(f=>fieldHTML(f,p)).join('')}</div></div>`;
+  return `<div class="editor" data-act="bgClose">
+    <div class="editor-sheet">
+      <div class="editor-head">
+        <button class="icon-btn" data-act="closeEditor">${ic('x',19)}</button>
+        <div><h2 class="fr">${editing.isNew?'Agrega':'Editar'} ${TYPE_LABEL[type]}</h2><div class="esub">${esc(p.name)||'Sin nombre todavía'}</div></div>
+      </div>
+      <div class="editor-body">${essHTML}${photoHTML}${compatHTML}${advHTML}</div>
+      <div class="editor-foot">
+        <button class="btn danger" data-act="deleteProduct">${ic('trash',16)} Eliminar</button>
+        <div style="flex:1"></div>
+        <button class="btn ghost" data-act="closeEditor">Cancelar</button>
+        <button class="btn primary" data-act="saveEditor">Guardar</button>
+      </div>
+    </div></div>`;
+}
+function fieldHTML(f,p){
+  const v=p[f.k];const full=f.full?' col-full':'';
+  let inner='';
+  if(f.t==='text')inner=`<input class="inp" data-field="${f.k}" value="${escA(v)}" placeholder="${escA(f.ph||'')}">`;
+  else if(f.t==='num')inner=`<input class="inp" type="number" inputmode="decimal" data-field="${f.k}" value="${escA(v)}" placeholder="${escA(f.ph||'')}">`;
+  else if(f.t==='price')inner=`<div class="price-wrap"><input class="inp" type="number" inputmode="decimal" data-field="${f.k}" value="${escA(v)}" placeholder="0"></div>`;
+  else if(f.t==='textarea')inner=`<textarea class="inp" data-field="${f.k}" placeholder="${escA(f.ph||'')}">${esc(v)}</textarea>`;
+  else if(f.t==='select')inner=`<select class="inp" data-field="${f.k}"><option value="">Elegir…</option>${f.o.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+  else if(f.t==='mc'){const arr=Array.isArray(v)?v:[];inner=`<div class="multichip" data-mc="${f.k}">${f.o.map(o=>`<button type="button" class="mc ${arr.includes(o)?'on':''}" data-act="mcToggle" data-opt="${escA(o)}">${o}</button>`).join('')}</div>`;}
+  return `<div class="field${full}"><label>${f.l}${f.req?' <span class="req">*</span>':''}</label>${inner}</div>`;
+}
+function photoSlotHTML(p,type,slot){
+  const isVid=VIDEO_SLOTS.includes(slot);
+  const req=REQUIRED[type].includes(slot);
+  if(isVid){
+    return `<div class="pslot video"><div class="ptop"><div class="drop">${ic('file',22)}<b>Video o link</b></div></div>
+      <div class="vid-inp"><input class="inp" data-vid="1" value="${escA(p.video||'')}" placeholder="Pega un link de video"></div></div>`;
+  }
+  const imgId=p.photos[slot];const url=imgId?imgCache[imgId]:null;
+  const roles=p.photoRoles[slot]||[];
+  const top=url
+    ? `<img src="${url}" alt=""><button class="rmv" data-act="photoRemove" data-slot="${escA(slot)}">${ic('x',14)}</button>${req?'<span class="req-dot">Necesaria</span>':''}`
+    : `<div class="drop">${ic('image',22)}<b>Subir foto</b></div>${req?'<span class="req-dot">Necesaria</span>':''}`;
+  const rolesH=url?`<div class="roles">${ROLES.map(r=>`<button class="rrole ${roles.includes(r)?'on':''}" data-act="roleToggle" data-slot="${escA(slot)}" data-role="${escA(r)}">${r}</button>`).join('')}</div>`:'';
+  return `<div class="pslot"><div class="ptop" data-act="photoPick" data-slot="${escA(slot)}">${top}</div>
+    <div class="plabel">${slot}</div>${rolesH}</div>`;
+}
+function collectEditor(){
+  const p=byId(editing.type,editing.id);if(!p)return;
+  SCHEMA[editing.type].forEach(f=>{
+    if(f.g)return;
+    if(f.t==='mc'){const c=$(`[data-mc="${f.k}"]`);p[f.k]=c?$$('.mc.on',c).map(b=>b.dataset.opt):[];}
+    else{const el=$(`[data-field="${f.k}"]`);if(el)p[f.k]=el.value;}
+  });
+  const vid=$('[data-vid]');if(vid)p.video=vid.value;
+  saveState();
+}
+function closeEditor(removeIfEmpty){
+  const ed=$('.editor');if(ed)ed.classList.remove('show');
+  document.body.style.overflow='';
+  if(editing&&removeIfEmpty&&editing.isNew){
+    const p=byId(editing.type,editing.id);
+    if(p&&!p.name&&photoCount(p)===0){const c=collOf(editing.type);const i=c.indexOf(p);if(i>=0)c.splice(i,1);saveState(false);}
+  }
+  setTimeout(()=>{const h=$('#editorHost');if(h)h.innerHTML='';editing=null;render();},200);
+}
+
+/* ---------- COMPATIBILIDADES ---------- */
+function getRule(bagId,strapId){
+  state.compat[bagId]=state.compat[bagId]||{};
+  if(!state.compat[bagId][strapId])state.compat[bagId][strapId]={compatible:false,hide:false,flags:{},why:'',comment:'',finalPrice:'',priceBySize:false,special:false};
+  return state.compat[bagId][strapId];
+}
+const FLAGS=[['recommendedMain','Recomendado principal'],['premium','Premium'],['casual','Casual'],['elegant','Elegante'],['gift','Para regalo'],['mainPhoto','Foto principal'],['hide','No mostrar']];
+function vCompat(){
+  if(!state.bags.length)return emptyState('Primero agrega bolsas','Necesitas al menos una bolsa para definir combinaciones.','bag','Agregar bolsa');
+  if(!compatBag||!byId('bag',compatBag))compatBag=state.bags[0].id;
+  const bag=byId('bag',compatBag);
+  const bagsBar=state.bags.map(b=>{const img=pImg(b);return `<button class="pickbag ${b.id===compatBag?'on':''}" data-act="compatBag" data-id="${b.id}">
+    <span class="pb-th">${img?`<img src="${img}">`:`<span class="glyph">${GS(20)}</span>`}</span>
+    <span class="pb-nm">${esc(b.name)||'Sin nombre'}<small>${esc(b.color||b.size||'bolsa')}</small></span></button>`;}).join('');
+  const straps=state.straps.filter(s=>!s.forType||s.forType==='Bolsa'||s.forType==='');
+  let strapCards;
+  if(!straps.length)strapCards=`<div class="empty-note">Aún no hay straps para bolsa. <b>Agrega straps</b> y vuelve aquí para combinarlos.</div>`;
+  else strapCards=`<div class="strap-pick-grid">${straps.map(s=>compatStrapCard(bag,s)).join('')}</div>`;
+  const compatCount=straps.filter(s=>getRuleRead(bag.id,s.id).compatible).length;
+  return `
+  <div class="view-head">
+    <span class="eyebrow"><span class="glyph">${GS(15)}</span> Compatibilidades</span>
+    <h1 class="fr">Elige qué straps sí combinan</h1>
+    <p class="intro">Selecciona una bolsa y marca los straps que combinan con ella. Solo los marcados se mostrarán al cliente en "Arma tu Taluna".</p>
+  </div>
+  <div class="mini-label" style="font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px">Elige una bolsa</div>
+  <div class="pickbar">${bagsBar}</div>
+  <div class="compat-info">${ic('alert',18)}<div>Combinando <b>${esc(bag.name)||'esta bolsa'}</b> — ${compatCount} strap(s) marcados como compatibles.</div></div>
+  ${strapCards}`;
+}
+function getRuleRead(b,s){return (state.compat[b]&&state.compat[b][s])||{compatible:false,flags:{}};}
+function compatStrapCard(bag,s){
+  const r=getRuleRead(bag.id,s.id);const img=pImg(s);
+  const suggested=(parseFloat(bag.basePrice)||0)+(parseFloat(s.price)||0);
+  const flagsH=FLAGS.map(([k,l])=>`<button class="fl ${ (r.flags&&r.flags[k])||(k==='hide'&&r.hide) ?'on':''}" data-act="compatFlag" data-bag="${bag.id}" data-strap="${s.id}" data-flag="${k}">${l}</button>`).join('');
+  return `<div class="spcard ${r.compatible?'active':''} ${r.hide?'hidden-c':''}">
+    <div class="sp-head">
+      <span class="sp-th">${img?`<img src="${img}">`:`<span class="glyph">${GS(22)}</span>`}</span>
+      <div class="sp-meta"><div class="nm">${esc(s.name)||'Sin nombre'}</div><div class="mt">${esc(s.type||'')} ${s.colorMain?'· '+esc(s.colorMain):''}</div></div>
+      <button class="sw ${r.compatible?'on':''}" data-act="compatToggle" data-bag="${bag.id}" data-strap="${s.id}" aria-label="Combina"></button>
+    </div>
+    <div class="sp-detail">
+      <div><div class="mini-label">¿Cómo es esta combinación?</div><div class="flagchips">${flagsH}</div></div>
+      <div class="field" style="margin:0"><label>Precio final (bolsa + strap)</label>
+        <div class="price-wrap"><input class="inp" data-inp="compat:${bag.id}:${s.id}:finalPrice" value="${escA(r.finalPrice||'')}" placeholder="${suggested||''}" type="number" inputmode="decimal"></div></div>
+      <div class="field" style="margin:0"><label>¿Por qué combina?</label><input class="inp" data-inp="compat:${bag.id}:${s.id}:why" value="${escA(r.why||'')}" placeholder="Ej. Los tonos camel se complementan"></div>
+      <div class="field" style="margin:0"><label>Comentario interno</label><input class="inp" data-inp="compat:${bag.id}:${s.id}:comment" value="${escA(r.comment||'')}" placeholder="Opcional"></div>
+      <div class="multichip"><button class="mc ${r.priceBySize?'on':''}" data-act="compatBool" data-bag="${bag.id}" data-strap="${s.id}" data-key="priceBySize">Precio cambia por tamaño</button>
+      <button class="mc ${r.special?'on':''}" data-act="compatBool" data-bag="${bag.id}" data-strap="${s.id}" data-key="special">Requiere foto especial</button></div>
+    </div></div>`;
+}
+
+/* ---------- CONSTRUCTOR ---------- */
+function vBuilder(){
+  const bags=state.bags.filter(b=>b.status!=='Oculta');
+  if(!bags.length)return emptyState('Primero agrega bolsas','Agrega bolsas y straps para simular la experiencia del cliente.','bag','Agregar bolsa');
+  const bag=builder.bagId?byId('bag',builder.bagId):null;
+  let compatStraps=[];
+  if(bag){compatStraps=state.straps.filter(s=>{const r=getRuleRead(bag.id,s.id);return r.compatible&&!r.hide;});}
+  const strap=builder.strapId?byId('strap',builder.strapId):null;
+  const steps=['Elige bolsa','Tamaño','Color','Elige strap','Precio','Vista previa','Listo'];
+  const stepState=[bag?'done':'current',bag?'done':'',bag?'done':'',!bag?'':strap?'done':'current',strap?'done':'',strap?'current':'',(strap?'':'' )];
+  const stepsH=steps.map((s,i)=>`<div class="step ${stepState[i]}"><span class="num">${i+1}</span>${s}</div>`).join('');
+  // preview
+  let stage;
+  if(!bag){stage=`<div class="placeholder"><span class="glyph">${GS(40)}</span><b>Primero elige una bolsa</b><span>La vista previa aparecerá aquí</span></div>`;}
+  else{
+    const combo=strap?state.combos.find(c=>c.bagId===bag.id&&c.strapId===strap.id):null;
+    const cImg=combo?comboImg(combo):null;
+    const bImg=pImg(bag);
+    if(cImg){stage=`<img class="bagimg" src="${cImg}" style="width:100%;height:100%;object-fit:cover">`;}
+    else if(bImg){
+      const sImg=strap?pImg(strap):null;
+      stage=`<img class="bagimg" src="${bImg}">${strap?`<div class="strap-chip">${sImg?`<img src="${sImg}">`:`<span class="glyph">${GS(22)}</span>`}<div><b>${esc(strap.name)}</b><small>strap elegido</small></div></div>`:''}${strap?`<div class="photo-pending">${ic('camera',13)} Falta foto de esta combinación</div>`:''}`;
+    }
+    else{stage=`<div class="placeholder"><span class="glyph">${GS(40)}</span><b>Foto pendiente</b><span>Sube fotos a esta bolsa para verla aquí</span></div>`;}
+  }
+  // panel
+  let msg,sub,panelBody;
+  if(!bag){msg='Primero elige una bolsa';sub='Toca una bolsa para empezar a armar.';
+    panelBody=`<div class="opt-chips">${bags.map(b=>optChip('bBag',b.id,b.name,b.color||b.size,pImg(b),false)).join('')}</div>`;
+  }else if(!strap){msg='Ahora elige un strap compatible';sub=`Mostrando solo straps que combinan con ${esc(bag.name)}.`;
+    panelBody=`<div class="opt-chips">${bags.map(b=>optChip('bBag',b.id,b.name,b.color||b.size,pImg(b),b.id===bag.id)).join('')}</div>
+      <div class="mini-label" style="margin:14px 0 8px;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700">Straps compatibles</div>`+
+      (compatStraps.length?`<div class="opt-chips">${compatStraps.map(s=>optChip('bStrap',s.id,s.name,s.colorMain||s.type,pImg(s),false)).join('')}</div>`
+        :`<div class="empty-note">Esta bolsa todavía no tiene straps compatibles. Ve a <b>Compatibilidades</b> para marcarlos.</div>`);
+  }else{
+    const r=getRuleRead(bag.id,strap.id);
+    const price=r.finalPrice||((parseFloat(bag.basePrice)||0)+(parseFloat(strap.price)||0))||'';
+    const combo=state.combos.find(c=>c.bagId===bag.id&&c.strapId===strap.id);
+    const ready=combo&&comboImg(combo);
+    msg=ready?'Esta combinación está lista':'Esta combinación está casi lista';
+    sub=ready?'Tiene foto, precio y straps definidos.':'Puedes guardarla; si falta foto, quedará marcada como pendiente.';
+    panelBody=`<div class="opt-chips">${compatStraps.map(s=>optChip('bStrap',s.id,s.name,s.colorMain||s.type,pImg(s),s.id===strap.id)).join('')}</div>
+      <div class="price-final"><span class="pf-l">Precio final</span><span class="pf-n">${price?money(price):'—'}</span></div>
+      <div class="btn-row">
+        <button class="btn camel" data-act="builderPhoto" data-bag="${bag.id}" data-strap="${strap.id}">${ic('image',16)} Subir foto de combinación</button>
+        <button class="btn primary" data-act="builderSave" data-bag="${bag.id}" data-strap="${strap.id}">${ic('check',16)} Guardar combinación</button>
+      </div>`;
+  }
+  return `
+  <div class="view-head">
+    <span class="eyebrow"><span class="glyph">${GS(15)}</span> Arma tu Taluna</span>
+    <h1 class="fr">Constructor de combinaciones</h1>
+    <p class="intro">Una vista previa de cómo el cliente armará su bolsa. Aquí también guardas las combinaciones para tu catálogo.</p>
+  </div>
+  <div class="steps">${stepsH}</div>
+  <div class="builder-grid">
+    <div class="preview-stage">${stage}</div>
+    <div class="card builder-panel"><div class="builder-msg fr">${msg}</div><div class="builder-sub">${sub}</div>${panelBody}</div>
+  </div>`;
+}
+function optChip(act,id,nm,sub,img,on){return `<button class="opt ${on?'on':''}" data-act="${act}" data-id="${id}"><span class="o-th">${img?`<img src="${img}">`:`<span class="glyph">${GS(18)}</span>`}</span><span class="o-nm">${esc(nm)||'—'}<small>${esc(sub||'')}</small></span></button>`;}
+
+/* ---------- COMBINACIONES ---------- */
+function vCombos(){
+  const f=filter.combinaciones;
+  const createBtn=`<button class="btn primary" data-act="go" data-route="constructor">${ic('wand',16)} Crear combinación</button>`;
+  if(!state.combos.length){
+    const body=`<div class="empty-note" style="padding:36px"><p style="margin-bottom:14px">Aún no hay combinaciones. Ábrelas en "Arma tu Taluna", elige una bolsa y un strap compatible, y guárdalas.</p>${createBtn}</div>`;
+    return stepWrap(4,'Revisa tus combinaciones','Aquí verás cada combinación de bolsa y strap, con su precio y si ya está lista para la tienda.',body,'pendientes','Siguiente: qué falta');
+  }
+  let list=state.combos.slice();
+  if(f==='ready')list=list.filter(c=>c.ready);
+  else if(f==='pending')list=list.filter(c=>!c.ready);
+  const chips=[['all','Todas'],['ready','Listas para tienda'],['pending','Pendientes']].map(([v,l])=>`<button class="fchip ${f===v?'on':''}" data-act="filter" data-scope="combinaciones" data-val="${v}">${l}</button>`).join('');
+  const cards=list.map(c=>{
+    const b=byId('bag',c.bagId),s=byId('strap',c.strapId);
+    const st=comboStatus(c);const cImg=comboImg(c);const bImg=b?pImg(b):null;const sImg=s?pImg(s):null;
+    const tags=(c.tags||[]).map(t=>`<span class="pill tag">${esc(t)}</span>`).join('');
+    return `<div class="combo-card">
+      <div class="combo-imgs">
+        <div class="ci">${cImg||bImg?`<img src="${cImg||bImg}">`:`<span class="glyph">${GS(24)}</span>`}<span class="tg">Bolsa</span></div>
+        <div class="ci">${sImg?`<img src="${sImg}">`:`<span class="glyph">${GS(24)}</span>`}<span class="tg">Strap</span></div>
+      </div>
+      <div class="combo-body">
+        <div class="ctitle">${esc(b?b.name:'(bolsa)')}<small>+ ${esc(s?s.name:'(strap)')}</small></div>
+        <div class="cprice">${money(c.finalPrice)}</div>
+        <div class="pill-row"><span class="pill ${st.key}">${st.label}</span>${c.ready?'<span class="pill good">Lista para tienda</span>':''}${tags}</div>
+      </div>
+      <div class="combo-foot">
+        <button class="btn ghost sm" data-act="comboEdit" data-id="${c.id}">${ic('edit',15)} Abrir</button>
+        <button class="btn ghost sm" data-act="comboReady" data-id="${c.id}">${ic('check',15)} ${c.ready?'Quitar':'Lista'}</button>
+        <button class="btn ghost sm danger" data-act="comboDelete" data-id="${c.id}">${ic('trash',15)}</button>
+      </div>
+    </div>`;
+  }).join('');
+  const body=`<div class="btn-row" style="margin-bottom:16px">${createBtn}</div><div class="filterbar">${chips}</div><div class="combo-grid">${cards}</div>`;
+  return stepWrap(4,'Revisa tus combinaciones','Todas las combinaciones de bolsa y strap. Marca las que ya están listas para la tienda.',body,'pendientes','Siguiente: qué falta');
+}
+
+/* ---------- PASO 3 · SUBIR FOTOS (guiado) ---------- */
+function vFotosGuided(){
+  const items=[];
+  const scan=(arr,type)=>arr.forEach(p=>{const missing=REQUIRED[type].filter(s=>!p.photos[s]);if(missing.length||photoCount(p)===0)items.push({p,type,missing});});
+  scan(state.bags,'bag');scan(state.straps,'strap');scan(state.belts,'belt');
+  const total=state.bags.length+state.straps.length+state.belts.length;
+  const done=total-items.length;
+  let body;
+  if(!total)body=`<div class="empty-note" style="padding:36px"><p style="margin-bottom:14px">Primero agrega bolsas o straps para subir sus fotos.</p><button class="btn primary" data-act="go" data-route="bolsas">${ic('bag',16)} Ir a bolsas</button></div>`;
+  else if(!items.length)body=`<div class="allgood">${ic('check',20)} ¡Todas las fotos necesarias ya están subidas!</div>`;
+  else body=`<div class="guide-list">${items.map(it=>{const img=pImg(it.p);const tags=(it.missing.length?it.missing:['Sin fotos aún']).slice(0,3).map(m=>`<span class="pill warn">${esc(m)}</span>`).join('');
+    return `<div class="guide-item">
+      <span class="gi-th">${img?`<img src="${img}">`:`<span class="glyph">${GS(22)}</span>`}</span>
+      <span class="gi-body"><b>${esc(it.p.name)||'Sin nombre'}</b><small>${TYPE_LABEL[it.type]} · ${it.missing.length?('faltan '+it.missing.length+' foto'+(it.missing.length===1?'':'s')):'sin fotos'}</small><span class="gi-tags">${tags}</span></span>
+      <button class="btn camel sm" data-act="edit" data-type="${it.type}" data-id="${it.p.id}">${ic('image',15)} Subir</button>
+    </div>`;}).join('')}</div>`;
+  const prog=total?`<div class="prog-line big"><div class="prog-bar"><i style="width:${done/total*100}%"></i></div><span>${done} de ${total} productos con sus fotos</span></div>`:'';
+  return stepWrap(3,'Sube las fotos que faltan','Toca "Subir" en cada producto y agrega las fotos desde tu dispositivo. Empieza por las marcadas como necesarias.',prog+body,'combinaciones','Siguiente: combinaciones');
+}
+
+/* ---------- PASO 5 · QUÉ FALTA (checklist) ---------- */
+function vPendientes(){
+  const miss=allMissing();
+  const byGroup={};miss.forEach(m=>{(byGroup[m.group]=byGroup[m.group]||[]).push(m);});
+  const sumCard=(n,l)=>`<div class="stat ${n>0?'alert':'good2'}"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  const st=stats();
+  let groupsH;
+  if(!miss.length)groupsH=`<div class="allgood">${ic('check',20)} ¡Todo en orden! No hay pendientes de foto ni datos.</div>`;
+  else groupsH=Object.keys(byGroup).map(g=>`
+    <div class="chk-group"><h3 class="fr">${g} <span class="cnt ${byGroup[g].length?'':'zero'}">${byGroup[g].length}</span></h3>
+      <div class="chk-list">${byGroup[g].map(m=>`<div class="chk-item"><span class="dot"></span>${esc(m.label)}<span class="badge2">${m.kind}</span></div>`).join('')}</div></div>`).join('');
+  const body=`<div class="chk-summary">${sumCard(st.fotos,'Fotos faltantes')}${sumCard(state.combos.filter(c=>!comboImg(c)).length,'Combinaciones sin foto')}${sumCard(allMissing().filter(m=>m.kind==='precio').length,'Sin precio')}${sumCard(allMissing().filter(m=>m.kind==='stock').length,'Sin stock')}</div>
+  <div class="btn-row" style="margin-bottom:18px"><button class="btn" data-act="copyPhotoTeam">${ic('wa',16)} Copiar para equipo de fotos</button><button class="btn ghost" data-act="exportChecklist">${ic('download',16)} Descargar checklist</button></div>
+  ${groupsH}`;
+  return stepWrap(5,'Qué falta para terminar','Una lista automática de todo lo pendiente. Úsala como guía y, cuando esté limpia, exporta la información.',body,'exportar','Exportar información');
+}
+
+/* ---------- TIENDA (preview) ---------- */
+function vTienda(){
+  const actBags=state.bags.filter(b=>b.status==='Activa'||!b.status);
+  const featured=state.bags.filter(b=>(b.tags||[]).length).slice(0,6);
+  const hero=state.bags.find(b=>Object.values(b.photoRoles||{}).some(r=>r.includes('Hero/Banner')))||actBags.find(b=>pImg(b))||state.bags[0];
+  const heroImg=hero?pImg(hero):null;
+  const cats=[['Bolsas',state.bags,'bag'],['Straps',state.straps,'strap'],['Cinturones',state.belts,'belt']];
+  const readyCombos=state.combos.filter(c=>c.ready||comboImg(c)).slice(0,6);
+  const igItems=[...state.bags,...state.straps].filter(p=>pImg(p)).slice(0,9);
+  const productBag=actBags.find(b=>pImg(b))||state.bags[0];
+  const pbStraps=productBag?state.straps.filter(s=>getRuleRead(productBag.id,s.id).compatible&&!getRuleRead(productBag.id,s.id).hide):[];
+  const block=(label,body)=>`<div class="sp-block"><div class="sp-blabel"><span class="glyph">${GS(13)}</span>${label}</div><div class="sp-pad">${body}</div></div>`;
+  return `<div class="view-head"><span class="eyebrow"><span class="glyph">${GS(15)}</span> Vista previa de cliente</span><h1 class="fr">Así se podría ver la tienda</h1><p class="intro">Una simulación con tu información actual. No es la página final, solo para revisar que todo esté completo.</p></div>
+  <div class="sp-wrap">
+    ${block('Home · Hero',`<div class="mock-hero">${heroImg?`<img src="${heroImg}">`:''}<div class="ov"><span class="glyph">${GS(22)}</span><h3 class="fr">${esc(hero?hero.name:'Taluna MX')}</h3><p>Bolsas y straps artesanales</p></div></div>`)}
+    ${block('Carrusel de categorías',`<div class="mock-cats">${cats.map(([n,arr,t])=>{const im=arr.map(pImg).find(Boolean);return `<div class="mock-cat"><div class="mc-img">${im?`<img src="${im}">`:`<span class="glyph">${GS(22)}</span>`}</div><b>${n}</b><small>${arr.length} piezas</small></div>`;}).join('')}</div>`)}
+    ${block('Página de bolsas',`<div class="mock-pgrid">${(state.bags.slice(0,8)).map(b=>{const im=pImg(b);return `<div class="mock-p"><div class="mp-img">${im?`<img src="${im}">`:`<span class="glyph">${GS(20)}</span>`}</div><b>${esc(b.name)||'—'}</b><small>${b.basePrice?money(b.basePrice):'sin precio'}</small></div>`;}).join('')||'<div class="empty-note">Sin bolsas todavía</div>'}</div>`)}
+    ${block('Página de straps',`<div class="mock-pgrid">${(state.straps.slice(0,8)).map(s=>{const im=pImg(s);return `<div class="mock-p"><div class="mp-img">${im?`<img src="${im}">`:`<span class="glyph">${GS(20)}</span>`}</div><b>${esc(s.name)||'—'}</b><small>${s.price?money(s.price):'sin precio'}</small></div>`;}).join('')||'<div class="empty-note">Sin straps todavía</div>'}</div>`)}
+    ${block('Página de producto',productBag?`<div class="mock-product"><div class="mpr-img">${pImg(productBag)?`<img src="${pImg(productBag)}">`:`<span class="glyph">${GS(28)}</span>`}</div><div><h3 class="fr">${esc(productBag.name)}</h3><p style="color:var(--muted);font-size:.86rem">${esc(productBag.descShort||'Sin descripción todavía')}</p><div style="font-weight:800;font-size:1.2rem;margin:8px 0">${money(productBag.basePrice)}</div><div class="mini-label" style="font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">Straps compatibles</div><div class="opt-chips">${pbStraps.length?pbStraps.slice(0,5).map(s=>optChip('noop',s.id,s.name,s.colorMain,pImg(s),false)).join(''):'<small style="color:var(--muted)">Marca compatibilidades para mostrarlos</small>'}</div></div></div>`:'<div class="empty-note">Agrega una bolsa para ver su página</div>')}
+    ${block('Arma tu Taluna',`<div class="mock-product"><div class="mpr-img">${pImg(productBag)?`<img src="${pImg(productBag)}">`:`<span class="glyph">${GS(28)}</span>`}</div><div><h3 class="fr">Personaliza tu bolsa</h3><p style="color:var(--muted);font-size:.86rem">El cliente elige bolsa, tamaño, color y un strap compatible, y ve el precio final.</p><button class="btn camel sm" data-act="go" data-route="constructor" style="margin-top:8px">${ic('wand',15)} Abrir constructor</button></div></div>`)}
+    ${block('Instagram Shopping',`<div class="mock-ig">${Array.from({length:9}).map((_,i)=>{const it=igItems[i];const im=it?pImg(it):null;return `<div class="igc">${im?`<img src="${im}">`:`<span class="glyph">${GS(20)}</span>`}</div>`;}).join('')}</div>`)}
+  </div>`;
+}
+
+/* ---------- EXPORTAR ---------- */
+function vExport(){
+  const card=(icn,t,d,act)=>`<div class="exp-card"><div class="ei">${ic(icn,21)}</div><h4 class="fr">${t}</h4><p>${d}</p><button class="btn block sm" data-act="${act}">Generar</button></div>`;
+  return `<div class="view-head"><span class="eyebrow"><span class="glyph">${GS(15)}</span> Exportar</span><h1 class="fr">Exportar información</h1><p class="intro">Descarga todo para construir la tienda real o para compartir con tu equipo. Todo se genera desde la nube.</p></div>
+  <div class="export-grid">
+    ${card('file','Información completa (JSON)','Todo: bolsas, straps, cinturones, combinaciones, compatibilidades e imágenes.','exportJSON')}
+    ${card('sheet','Productos (CSV)','Lista de bolsas, straps y cinturones para Excel.','exportCSVprod')}
+    ${card('sheet','Combinaciones (CSV)','Lista de combinaciones con precio y estado.','exportCSVcombos')}
+    ${card('download','Checklist de fotos','Lo que falta, listo para imprimir o compartir.','exportChecklist')}
+    ${card('wa','Resumen para WhatsApp','Texto corto con el avance para mandar al equipo.','copyWhatsApp')}
+    ${card('camera','Resumen para fotografía','Lista de fotos pendientes para la sesión.','copyPhotoTeam')}
+  </div>
+  <div class="danger-zone">
+    <h4 class="fr">Empezar de cero</h4>
+    <p>Borra todos los productos, fotos y combinaciones de la nube. No se puede deshacer.</p>
+    <button class="btn danger" data-act="wipe">${ic('trash',16)} Borrar todo</button>
+  </div>`;
+}
+
+/* ---------- shared empty state ---------- */
+function emptyState(title,desc,addType,btn,route){
+  const action=route?`data-act="go" data-route="${route}"`:`data-act="add" data-type="${addType}"`;
+  return `<div class="view-head"><h1 class="fr">${title}</h1></div><div class="empty-note" style="padding:40px"><p style="margin-bottom:16px">${desc}</p><button class="btn primary" ${action}>${ic('plus',16)} ${btn}</button></div>`;
+}
+
+/* ===================== EXPORT BUILDERS ===================== */
+function download(name,text,mime='text/plain'){const blob=new Blob([text],{type:mime+';charset=utf-8'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+function csvCell(v){v=(v==null?'':String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function storePreviewData(){return{hero:(state.bags[0]||{}).id||null,categories:['Bolsas','Straps','Cinturones'],featuredBags:state.bags.filter(b=>(b.tags||[]).length).map(b=>b.id),featuredCombos:state.combos.filter(c=>c.ready).map(c=>c.id)};}
+function buildExportObject(includeImages){
+  const usedIds=new Set();
+  [...state.bags,...state.straps,...state.belts].forEach(p=>Object.values(p.photos||{}).forEach(id=>id&&usedIds.add(id)));
+  state.combos.forEach(c=>c.photoId&&usedIds.add(c.photoId));
+  const images={};if(includeImages)usedIds.forEach(id=>{if(imgCache[id])images[id]=imgCache[id];});
+  return{
+    meta:{brand:'Taluna MX',tool:'Taluna Organizador',exported:new Date().toISOString()},
+    bags:state.bags,straps:state.straps,belts:state.belts,
+    combinations:state.combos,compatibilityRules:state.compat,
+    images, missingAssets:allMissing(), storePreviewData:storePreviewData()
+  };
+}
+function exportJSON(){const obj=buildExportObject(true);download('taluna-organizador.json',JSON.stringify(obj,null,2),'application/json');toast('Información completa descargada');}
+function exportCSVprod(){
+  const head=['tipo','nombre','tipo/categoria','color','tamano/talla','precio','stock','estado','codigo','etiquetas','material','fotos'];
+  const rows=[head.join(',')];
+  const push=(t,p)=>{rows.push([TYPE_LABEL[t],p.name,(p.category||p.type||''),(p.color||p.colorMain||''),(p.size||''),(t==='bag'?p.basePrice:p.price)||'',p.stock||'',p.status||'',p.sku||'',(p.tags||[]).join(' / '),p.material||'',photoCount(p)].map(csvCell).join(','));};
+  state.bags.forEach(p=>push('bag',p));state.straps.forEach(p=>push('strap',p));state.belts.forEach(p=>push('belt',p));
+  download('taluna-productos.csv',rows.join('\n'),'text/csv');toast('CSV de productos descargado');
+}
+function exportCSVcombos(){
+  const head=['bolsa','strap','precio_final','estado','etiquetas','lista_para_tienda'];
+  const rows=[head.join(',')];
+  state.combos.forEach(c=>{const b=byId('bag',c.bagId),s=byId('strap',c.strapId);rows.push([b?b.name:'',s?s.name:'',c.finalPrice||'',comboStatus(c).label,(c.tags||[]).join(' / '),c.ready?'Sí':'No'].map(csvCell).join(','));});
+  download('taluna-combinaciones.csv',rows.join('\n'),'text/csv');toast('CSV de combinaciones descargado');
+}
+function checklistText(){
+  const miss=allMissing();if(!miss.length)return'TALUNA — CHECKLIST DE FOTOS\n\n¡Todo completo! No hay pendientes.';
+  const byG={};miss.forEach(m=>{(byG[m.group]=byG[m.group]||[]).push(m);});
+  let t='TALUNA — CHECKLIST DE FOTOS Y DATOS\n'+new Date().toLocaleDateString('es-MX')+'\n';
+  Object.keys(byG).forEach(g=>{t+='\n'+g.toUpperCase()+' ('+byG[g].length+')\n';byG[g].forEach(m=>t+='  [ ] '+m.label+'\n');});
+  return t;
+}
+function exportChecklist(){download('taluna-checklist-fotos.txt',checklistText());toast('Checklist descargado');}
+function whatsappText(){
+  const st=stats();
+  let t='✨ TALUNA — Avance del catálogo\n\n';
+  t+='👜 Bolsas: '+st.bags+'\n🎗️ Straps: '+st.straps+'\n🪢 Cinturones: '+st.belts+'\n🧩 Combinaciones: '+st.combos+'\n\n';
+  t+='Pendientes:\n';
+  t+='• Productos incompletos: '+st.incompletos+'\n• Fotos faltantes: '+st.fotos+'\n• Combinaciones sin precio: '+st.combosSinPrecio+'\n• Combinaciones sin foto: '+st.combosSinFoto+'\n\n';
+  const ready=state.combos.filter(c=>c.ready);
+  if(ready.length){t+='Listas para tienda:\n';ready.slice(0,12).forEach(c=>t+='• '+comboName(c)+' — '+money(c.finalPrice)+'\n');}
+  return t;
+}
+function photoTeamText(){
+  const fotos=allMissing().filter(m=>m.kind==='foto');
+  let t='📸 TALUNA — Fotos pendientes\n\n';
+  if(!fotos.length)return t+'¡Sin pendientes de foto! 🎉';
+  const byG={};fotos.forEach(m=>{(byG[m.group]=byG[m.group]||[]).push(m);});
+  Object.keys(byG).forEach(g=>{t+=g+':\n';byG[g].forEach(m=>t+='• '+m.label.replace(/—\s*falta/i,'·')+'\n');t+='\n';});
+  return t;
+}
+async function copyText(text,msg){try{await navigator.clipboard.writeText(text);toast(msg);}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(msg);}catch(_){toast('No se pudo copiar','bad');}ta.remove();}}
+
+/* ===================== TOAST ===================== */
+let toastT;
+function toast(msg,kind){const t=$('#toast');$('#toastMsg').textContent=msg;t.className='toast show'+(kind==='bad'?' bad':'');$('#toastGlyph').innerHTML=GS(16);clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2300);}
+
+/* ===================== EVENTS ===================== */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const a=t.dataset.act;
+  switch(a){
+    case 'openNav':$('#sidebar').classList.add('open');$('#backdrop').classList.add('show');break;
+    case 'closeNav':$('#sidebar').classList.remove('open');$('#backdrop').classList.remove('show');break;
+    case 'go':go(t.dataset.route);break;
+    case 'add':openEditor(t.dataset.type);break;
+    case 'edit':openEditor(t.dataset.type,t.dataset.id);break;
+    case 'filter':{filter[t.dataset.scope]=t.dataset.val;render();break;}
+    case 'bgClose':if(!e.target.closest('.editor-sheet'))closeEditor(true);break;
+    case 'closeEditor':collectEditor();closeEditor(true);break;
+    case 'saveEditor':{collectEditor();const p=byId(editing.type,editing.id);if(!p.name){toast('Ponle un nombre primero','bad');break;}saveState();toast('Guardado ✓');closeEditor(false);break;}
+    case 'deleteProduct':{if(confirm('¿Eliminar este producto?')){const c=collOf(editing.type);const p=byId(editing.type,editing.id);
+      Object.values(p.photos||{}).forEach(id=>{delete state.images[id];delete imgCache[id];});
+      const i=c.indexOf(p);if(i>=0)c.splice(i,1);
+      state.combos=state.combos.filter(cb=>cb.bagId!==editing.id&&cb.strapId!==editing.id);
+      saveState();editing.isNew=false;closeEditor(false);toast('Eliminado');}break;}
+    case 'mcToggle':t.classList.toggle('on');break;
+    case 'toggleAdv':{const bd=$('#advBody');if(bd){bd.classList.toggle('open');t.classList.toggle('open');}break;}
+    case 'toggleMore':{const bd=$('#morePhotos');if(bd){bd.classList.toggle('open');t.classList.toggle('open');}break;}
+    case 'quickCompat':{const r=getRule(t.dataset.bag,t.dataset.strap);r.compatible=!r.compatible;t.classList.toggle('on');saveState();break;}
+    case 'photoPick':{pendingPhoto={type:editing.type,id:editing.id,slot:t.dataset.slot};$('#filePick').value='';$('#filePick').click();break;}
+    case 'photoRemove':{e.stopPropagation();const p=byId(editing.type,editing.id);const slot=t.dataset.slot;const id=p.photos[slot];if(id){delete imgCache[id];delete state.images[id];}delete p.photos[slot];delete p.photoRoles[slot];saveState();refreshEditorPhotos();break;}
+    case 'roleToggle':{const p=byId(editing.type,editing.id);const slot=t.dataset.slot,role=t.dataset.role;const arr=p.photoRoles[slot]=p.photoRoles[slot]||[];const i=arr.indexOf(role);if(i>=0)arr.splice(i,1);else arr.push(role);t.classList.toggle('on');saveState();break;}
+    /* compat */
+    case 'compatBag':compatBag=t.dataset.id;render();break;
+    case 'compatToggle':{const r=getRule(t.dataset.bag,t.dataset.strap);r.compatible=!r.compatible;saveState();render();break;}
+    case 'compatFlag':{const r=getRule(t.dataset.bag,t.dataset.strap);const f=t.dataset.flag;if(f==='hide'){r.hide=!r.hide;}else{r.flags=r.flags||{};r.flags[f]=!r.flags[f];}t.classList.toggle('on');saveState();if(f==='hide')render();break;}
+    case 'compatBool':{const r=getRule(t.dataset.bag,t.dataset.strap);const k=t.dataset.key;r[k]=!r[k];t.classList.toggle('on');saveState();break;}
+    /* builder */
+    case 'bBag':builder.bagId=t.dataset.id;builder.strapId=null;render();break;
+    case 'bStrap':builder.strapId=t.dataset.id;render();break;
+    case 'builderSave':{saveCombo(t.dataset.bag,t.dataset.strap);break;}
+    case 'builderPhoto':{pendingPhoto={combo:true,bagId:t.dataset.bag,strapId:t.dataset.strap};$('#filePick').value='';$('#filePick').click();break;}
+    /* combos */
+    case 'comboEdit':{const c=state.combos.find(x=>x.id===t.dataset.id);if(c){builder.bagId=c.bagId;builder.strapId=c.strapId;go('constructor');}break;}
+    case 'comboReady':{toggleReady(t.dataset.id);break;}
+    case 'comboDelete':{if(confirm('¿Eliminar esta combinación?')){state.combos=state.combos.filter(x=>x.id!==t.dataset.id);saveState();render();toast('Combinación eliminada');}break;}
+    /* exports */
+    case 'exportJSON':exportJSON();break;
+    case 'exportCSVprod':exportCSVprod();break;
+    case 'exportCSVcombos':exportCSVcombos();break;
+    case 'exportChecklist':exportChecklist();break;
+    case 'copyWhatsApp':copyText(whatsappText(),'Resumen copiado para WhatsApp');break;
+    case 'copyPhotoTeam':copyText(photoTeamText(),'Lista de fotos copiada');break;
+    case 'wipe':{if(confirm('¿Borrar TODO? Esto no se puede deshacer.')){localStorage.removeItem(LS);imgCache={};state={bags:[],straps:[],belts:[],compat:{},combos:[],meta:{created:Date.now()},images:{}};seed();go('inicio');toast('Todo borrado');}break;}
+    case 'noop':break;
+  }
+});
+/* live inputs (compat fields) */
+document.addEventListener('input',e=>{
+  const t=e.target.closest('[data-inp]');if(!t)return;
+  const[scope,bag,strap,field]=t.dataset.inp.split(':');
+  if(scope==='compat'){const r=getRule(bag,strap);r[field]=t.value;saveDebounced();}
+});
+/* editor live subtitle */
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.field==='name'){const sub=$('.editor .esub');if(sub)sub.textContent=t.value||'Sin nombre todavía';}});
+
+/* file upload */
+$('#filePick').addEventListener('change',async e=>{
+  const file=e.target.files&&e.target.files[0];if(!file||!pendingPhoto)return;
+  toast('Cargando foto…');
+  const dataURL=await fileToDataURL(file);
+  const id=uid();
+  imgCache[id]=dataURL;            // optimista: se ve de inmediato
+  state.images[id]=dataURL;        // por si todavía no hay nube
+  try{
+    const up=await cloudUploadImage(dataURL,id);
+    imgCache[id]=up.url;state.images[id]=up.url;
+  }catch(err){ /* queda local; flushPending lo sube luego */ }
+  if(pendingPhoto.combo){
+    let c=state.combos.find(x=>x.bagId===pendingPhoto.bagId&&x.strapId===pendingPhoto.strapId);
+    if(!c){c=newCombo(pendingPhoto.bagId,pendingPhoto.strapId);state.combos.push(c);}
+    if(c.photoId&&c.photoId!==id){delete state.images[c.photoId];delete imgCache[c.photoId];}
+    c.photoId=id;saveState();toast('Foto de combinación guardada');render();
+  }else{
+    const p=byId(pendingPhoto.type,pendingPhoto.id);
+    if(p){const old=p.photos[pendingPhoto.slot];if(old&&old!==id){delete state.images[old];delete imgCache[old];}p.photos[pendingPhoto.slot]=id;saveState();refreshEditorPhotos();}
+  }
+  pendingPhoto=null;e.target.value='';
+});
+function refreshEditorPhotos(){const p=byId(editing.type,editing.id);if(!p)return;const grids=$$('.editor .photo-grid');const reqSlots=PHOTOS[editing.type].filter(s=>REQUIRED[editing.type].includes(s));const moreSlots=PHOTOS[editing.type].filter(s=>!REQUIRED[editing.type].includes(s));if(grids[0])grids[0].innerHTML=reqSlots.map(s=>photoSlotHTML(p,editing.type,s)).join('');if(grids[1])grids[1].innerHTML=moreSlots.map(s=>photoSlotHTML(p,editing.type,s)).join('');}
+
+/* combos helpers */
+function newCombo(bagId,strapId){const r=getRuleRead(bagId,strapId);const bag=byId('bag',bagId),s=byId('strap',strapId);const price=r.finalPrice||((parseFloat(bag&&bag.basePrice)||0)+(parseFloat(s&&s.price)||0))||'';return{id:uid(),bagId,strapId,finalPrice:price,tags:[],photoId:'',ready:false};}
+function saveCombo(bagId,strapId){
+  let c=state.combos.find(x=>x.bagId===bagId&&x.strapId===strapId);
+  if(!c){c=newCombo(bagId,strapId);state.combos.push(c);toast('Combinación guardada ✓');}
+  else{const r=getRuleRead(bagId,strapId);c.finalPrice=r.finalPrice||c.finalPrice;toast('Combinación actualizada');}
+  saveState();render();
+}
+function toggleReady(id){
+  const c=state.combos.find(x=>x.id===id);if(!c)return;
+  if(c.ready){c.ready=false;saveState();render();toast('Quitada de "lista para tienda"');return;}
+  const b=byId('bag',c.bagId),s=byId('strap',c.strapId);const reasons=[];
+  if(!b||!s)reasons.push('falta bolsa o strap');
+  if(!c.finalPrice)reasons.push('falta precio final');
+  if(!comboImg(c)&&!(b&&pImg(b)))reasons.push('falta foto');
+  if(b&&(b.stock===''||b.stock==null))reasons.push('falta stock de bolsa');
+  if(s&&(s.stock===''||s.stock==null))reasons.push('falta stock de strap');
+  if(!getRuleRead(c.bagId,c.strapId).compatible)reasons.push('compatibilidad no confirmada');
+  if(reasons.length){toast('No está lista: '+reasons.join(', '),'bad');return;}
+  c.ready=true;saveState();render();toast('¡Lista para tienda! ✓');
+}
+
+/* ===================== INIT ===================== */
+(async function init(){
+  let usedCloud=false;
+  const c=await cloudLoadState();
+  if(c.data){applyState(c.data);usedCloud=true;}
+  else if(c.auth===false){loadStateLocal();setSync('auth');showAuthGate();}
+  else{loadStateLocal();if(c.offline)setSync('offline');}
+  if(!state.bags.length&&!state.straps.length&&!state.belts.length&&!state.combos.length){seed();}
+  rebuildImgCache();
+  const h=(location.hash||'').replace('#','');if(TITLE[h])route=h;
+  render();
+  window.addEventListener('hashchange',()=>{const r=(location.hash||'').replace('#','');if(TITLE[r]){route=r;render();}});
+  if(cloudOK){flushPending();if(!usedCloud)cloudSaveState();}
+})();
+</script>
+</body>
+</html>
