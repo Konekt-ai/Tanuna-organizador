@@ -198,6 +198,7 @@ a{color:inherit}
 .fgroup>.gh{display:flex;align-items:center;gap:.6em;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
   color:var(--camel-d);font-weight:700;margin-bottom:12px}
 .fgroup>.gh .glyph{color:var(--camel)}
+.fgroup>.gh .opt-tag{text-transform:none;letter-spacing:normal;font-size:.62rem;font-weight:800;color:var(--camel-d);background:var(--camel-bg);border-radius:20px;padding:2px 9px;line-height:1.4}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
@@ -541,7 +542,8 @@ const ICONS={
  sheet:'<path d="M5 3h14v18H5zM5 9h14M5 15h14M11 3v18"/>',
  wa:'<path d="M4 20l1.5-4A8 8 0 1 1 9 19.5L4 20z"/>',
  chev:'<path d="M9 6l6 6-6 6"/>',
- cloud:'<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18H7z"/>'
+ cloud:'<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18H7z"/>',
+ ruler:'<path d="M4 9h16v6H4zM8 9v3M12 9v4M16 9v3"/>'
 };
 const ic=(n,sz=18)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
 
@@ -672,7 +674,7 @@ const SCHEMA={
   {k:'category',l:'Categoría',t:'text',ph:'Ej. Bolsa de mano',adv:1},
   {k:'useType',l:'Tipo de uso',t:'mc',o:O.use,full:1,adv:1},
   {k:'profile',l:'Perfil recomendado',t:'text',ph:'Opcional',full:1,adv:1},
-  {k:'dimH',l:'Alto (cm)',t:'num',adv:1},{k:'dimW',l:'Ancho (cm)',t:'num',adv:1},{k:'dimD',l:'Profundidad (cm)',t:'num',adv:1},
+  {k:'dimH',l:'Alto',t:'num',med:1,ph:'cm'},{k:'dimW',l:'Ancho',t:'num',med:1,ph:'cm'},{k:'dimD',l:'Fondo',t:'num',med:1,ph:'cm'},
   {k:'weight',l:'Peso aprox. (g)',t:'num',adv:1},
   {k:'material',l:'Material',t:'text',ph:'Ej. Piel de grano',adv:1},
   {k:'hardware',l:'Herrajes',t:'text',ph:'Ej. Mosquetón',adv:1},
@@ -957,9 +959,15 @@ function openEditor(type,id){
   document.body.style.overflow='hidden';
 }
 function editorHTML(p,type){
-  const ess=SCHEMA[type].filter(f=>!f.adv);
+  const ess=SCHEMA[type].filter(f=>!f.adv&&!f.med);
+  const med=SCHEMA[type].filter(f=>f.med);
   const adv=SCHEMA[type].filter(f=>f.adv);
-  const essHTML=`<div class="fgroup"><div class="grid2">${ess.map(f=>fieldHTML(f,p)).join('')}</div></div>`;
+  // Las medidas salen justo después de "Tamaño" para que la dueña las ubique rápido (siguen siendo opcionales).
+  const anchor=med.length?ess.findIndex(f=>f.k==='size'):-1;
+  const grid2=arr=>arr.length?`<div class="fgroup"><div class="grid2">${arr.map(f=>fieldHTML(f,p)).join('')}</div></div>`:'';
+  const essHTML=grid2(anchor>=0?ess.slice(0,anchor+1):ess);
+  const essBotHTML=grid2(anchor>=0?ess.slice(anchor+1):[]);
+  const medHTML=med.length?`<div class="fgroup"><div class="gh"><span class="glyph">${ic('ruler',15)}</span>Medidas (cm) <span class="opt-tag">opcional</span></div><p class="ghint">Puedes dejarlas en blanco y llenarlas después. Aun así, ponerlas le da confianza a quien compra y evita devoluciones.</p><div class="grid3">${med.map(f=>fieldHTML(f,p)).join('')}</div></div>`:'';
   const reqSlots=PHOTOS[type].filter(s=>REQUIRED[type].includes(s));
   const moreSlots=PHOTOS[type].filter(s=>!REQUIRED[type].includes(s));
   const photoHTML=`<div class="fgroup"><div class="gh"><span class="glyph">${GS(13)}</span>Fotos principales</div>
@@ -984,7 +992,7 @@ function editorHTML(p,type){
         <button class="icon-btn" data-act="closeEditor">${ic('x',19)}</button>
         <div><h2 class="fr">${editing.isNew?'Agrega':'Editar'} ${TYPE_LABEL[type]}</h2><div class="esub">${esc(p.name)||'Sin nombre todavía'}</div></div>
       </div>
-      <div class="editor-body">${essHTML}${photoHTML}${compatHTML}${advHTML}</div>
+      <div class="editor-body">${essHTML}${medHTML}${essBotHTML}${photoHTML}${compatHTML}${advHTML}</div>
       <div class="editor-foot">
         <button class="btn danger" data-act="deleteProduct">${ic('trash',16)} Eliminar</button>
         <div style="flex:1"></div>
@@ -1295,9 +1303,10 @@ function buildExportObject(includeImages){
 }
 function exportJSON(){const obj=buildExportObject(true);download('taluna-organizador.json',JSON.stringify(obj,null,2),'application/json');toast('Información completa descargada');}
 function exportCSVprod(){
-  const head=['tipo','nombre','tipo/categoria','color','tamano/talla','precio','stock','estado','codigo','etiquetas','material','fotos'];
+  const head=['tipo','nombre','tipo/categoria','color','tamano/talla','medidas (cm)','precio','stock','estado','codigo','etiquetas','material','fotos'];
   const rows=[head.join(',')];
-  const push=(t,p)=>{rows.push([TYPE_LABEL[t],p.name,(p.category||p.type||''),(p.color||p.colorMain||''),(p.size||''),(t==='bag'?p.basePrice:p.price)||'',p.stock||'',p.status||'',p.sku||'',(p.tags||[]).join(' / '),p.material||'',photoCount(p)].map(csvCell).join(','));};
+  const bagDims=p=>{const d=[p.dimH,p.dimW,p.dimD].filter(x=>x!==''&&x!=null);return d.length?d.join('×'):'';};
+  const push=(t,p)=>{rows.push([TYPE_LABEL[t],p.name,(p.category||p.type||''),(p.color||p.colorMain||''),(p.size||''),bagDims(p),(t==='bag'?p.basePrice:p.price)||'',p.stock||'',p.status||'',p.sku||'',(p.tags||[]).join(' / '),p.material||'',photoCount(p)].map(csvCell).join(','));};
   state.bags.forEach(p=>push('bag',p));state.straps.forEach(p=>push('strap',p));state.belts.forEach(p=>push('belt',p));
   download('taluna-productos.csv',rows.join('\n'),'text/csv');toast('CSV de productos descargado');
 }
