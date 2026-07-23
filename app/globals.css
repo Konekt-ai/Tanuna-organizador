@@ -2,8 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Sistema de diseño Taluna Panel.
+  Tokens en OKLCH (canales L C H sin envolver, para soportar /opacidad en Tailwind:
+  oklch(var(--token) / <alpha-value>)). Modo claro en :root, oscuro bajo .dark.
+  Paleta cálida artesanal: marfil, beige, camel, café.
+*/
 :root {
-  --camel-bg: #F4EADC;
+  /* Marca base */
+  --ivory: 97.2% 0.014 85;
+  --beige: 92.5% 0.022 78;
+  --camel: 68% 0.075 62;
+  --cafe: 36% 0.045 55;
+
+  --radius: 0.9rem;
+
+  /* Semánticos — claro */
+  --background: 97.2% 0.014 85;
+  --foreground: 20% 0.02 55;
+  --card: 99.5% 0.006 85;
+  --card-foreground: 20% 0.02 55;
+  --popover: 99.5% 0.006 85;
+  --popover-foreground: 20% 0.02 55;
+  --primary: 34% 0.045 55;
+  --primary-foreground: 98% 0.01 85;
+  --secondary: 92% 0.022 78;
+  --secondary-foreground: 26% 0.03 55;
+  --muted: 94% 0.018 82;
+  --muted-foreground: 42% 0.03 60;
+  --accent: 55% 0.11 45;
+  --accent-foreground: 98% 0.01 85;
+  --destructive: 50% 0.17 28;
+  --destructive-foreground: 98% 0.01 85;
+  --success: 62% 0.1 140;
+  --success-foreground: 98% 0.01 85;
+  --warning: 70% 0.11 75;
+  --warning-foreground: 25% 0.05 60;
+  --border: 85% 0.025 78;
+  --input: 88% 0.02 78;
+  --ring: 55% 0.11 45;
+
+  /* Charts */
+  --chart-1: 68% 0.075 62;
+  --chart-2: 50% 0.055 55;
+  --chart-3: 36% 0.045 55;
+  --chart-4: 82% 0.045 75;
+  --chart-5: 60% 0.09 45;
+
+  /* Sidebar */
+  --sidebar: 95.5% 0.018 82;
+  --sidebar-foreground: 24% 0.03 55;
+  --sidebar-primary: 34% 0.045 55;
+  --sidebar-primary-foreground: 98% 0.01 85;
+  --sidebar-accent: 90% 0.03 78;
+  --sidebar-accent-foreground: 24% 0.03 55;
+  --sidebar-border: 85% 0.025 78;
+  --sidebar-ring: 55% 0.11 45;
+}
+
+.dark {
+  --background: 19% 0.012 55;
+  --foreground: 96% 0.014 85;
+  --card: 24% 0.014 55;
+  --card-foreground: 96% 0.014 85;
+  --popover: 24% 0.014 55;
+  --popover-foreground: 96% 0.014 85;
+  --primary: 86% 0.05 78;
+  --primary-foreground: 20% 0.02 55;
+  --secondary: 28% 0.018 55;
+  --secondary-foreground: 94% 0.014 85;
+  --muted: 26% 0.014 55;
+  --muted-foreground: 78% 0.02 80;
+  --accent: 72% 0.11 55;
+  --accent-foreground: 18% 0.02 55;
+  --destructive: 65% 0.17 28;
+  --destructive-foreground: 98% 0.01 85;
+  --success: 70% 0.11 140;
+  --success-foreground: 18% 0.02 55;
+  --warning: 78% 0.1 75;
+  --warning-foreground: 20% 0.03 60;
+  --border: 34% 0.02 55;
+  --input: 30% 0.02 55;
+  --ring: 72% 0.11 55;
+
+  --chart-1: 70% 0.09 62;
+  --chart-2: 60% 0.07 55;
+  --chart-3: 82% 0.045 75;
+  --chart-4: 50% 0.06 55;
+  --chart-5: 72% 0.11 45;
+
+  --sidebar: 22% 0.014 55;
+  --sidebar-foreground: 94% 0.014 85;
+  --sidebar-primary: 86% 0.05 78;
+  --sidebar-primary-foreground: 18% 0.02 55;
+  --sidebar-accent: 28% 0.018 55;
+  --sidebar-accent-foreground: 94% 0.014 85;
+  --sidebar-border: 32% 0.02 55;
+  --sidebar-ring: 72% 0.11 55;
+}
+
+* {
+  border-color: oklch(var(--border));
 }
 
 html,
@@ -13,29 +112,49 @@ body {
 }
 
 body {
-  background: #fff;
-  color: #2a2622;
-  font-family: var(--font-manrope), system-ui, -apple-system, sans-serif;
+  background: oklch(var(--background));
+  color: oklch(var(--foreground));
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'ss01', 'cv11';
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
 
 ::selection {
-  background: var(--camel-bg);
+  background: oklch(var(--accent) / 0.2);
 }
 
-/* Títulos en Fraunces, como el Organizador. */
+/* Títulos en la serif de marca (Instrument Serif). */
 h1,
 h2,
-h3,
-h4 {
-  font-family: var(--font-fraunces), Georgia, serif;
+h3 {
+  font-family: var(--font-serif), 'Cormorant Garamond', Georgia, serif;
   font-weight: 400;
   letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+/* Utilidad para forzar la serif de marca. */
+.font-serif {
+  font-family: var(--font-serif), 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Scrollbars sutiles. */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: oklch(var(--muted-foreground) / 0.28);
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }
 
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+    animation: none !important;
   }
 }

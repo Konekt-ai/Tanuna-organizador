@@ -1,39 +1,47 @@
 import './globals.css';
-import { Fraunces, Manrope } from 'next/font/google';
+import { Instrument_Serif, Inter } from 'next/font/google';
+import ThemeProvider from '@/components/theme-provider';
 
-// Mismas tipografías que el Organizador: Fraunces (títulos) + Manrope (texto).
-const fraunces = Fraunces({
+// Tipografías del panel: Instrument Serif (títulos/marca) + Inter (cuerpo/UI),
+// las mismas del diseño de la fachada.
+const serif = Instrument_Serif({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
+  weight: ['400'],
   style: ['normal', 'italic'],
-  variable: '--font-fraunces',
+  variable: '--font-serif',
   display: 'swap',
 });
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-manrope',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
   display: 'swap',
 });
 
 export const metadata = {
-  title: 'Taluna · Organizador',
+  title: 'Taluna · Panel',
   description:
-    'Organiza el catálogo de Taluna (bolsas, straps, cinturones y combinaciones) y sube fotos desde el celular. Todo se guarda en la nube.',
+    'Panel administrativo de Taluna MX: pedidos, clientas, catálogo, inventario y reportes. Todo en la nube.',
 };
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#FAF7F2',
+  themeColor: '#F7F1E7',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" className={`${fraunces.variable} ${manrope.variable}`}>
-      <body>{children}</body>
+    <html
+      lang="es"
+      className={`${serif.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
