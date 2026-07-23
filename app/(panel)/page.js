@@ -9,6 +9,9 @@ import {
 import { getPanelUser } from '@/lib/auth';
 import { StatTile, Card } from '@/components/panel/ui';
 import OrganizerCard from '@/components/panel/OrganizerCard';
+import { money, catalogCounts } from '@/lib/catalog';
+import { inventarioKpis } from '@/lib/inventario';
+import { ventasResumen, contarClientas } from '@/lib/ventas';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +25,17 @@ const ACCESOS = [
 export default async function InicioPage() {
   const user = await getPanelUser();
   const nombre = user.nombre || 'de nuevo';
+
+  // KPIs reales (cada uno es null si aún no se corre su SQL).
+  const [ventas, inv, clientas, cat] = await Promise.all([
+    ventasResumen(),
+    inventarioKpis(),
+    contarClientas(),
+    catalogCounts(),
+  ]);
+  const piezas = inv?.piezas_totales;
+  const productos = cat ? cat.bolsas + cat.straps + cat.cinturones : null;
+  const dash = (v) => (v === null || v === undefined ? '—' : v);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -39,12 +53,28 @@ export default async function InicioPage() {
         </p>
       </div>
 
-      {/* KPIs (se activan en fases posteriores) */}
+      {/* KPIs reales (— hasta que existan datos) */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile label="Ventas del mes" value="—" sub="Se activa con Pedidos (Fase 3)" />
-        <StatTile label="Pedidos" value="—" sub="Se activa con Pedidos (Fase 3)" />
-        <StatTile label="Clientas" value="—" sub="Se activa con el CRM (Fase 3)" />
-        <StatTile label="Piezas en catálogo" value="—" sub="Se activa con Catálogo (Fase 1)" />
+        <StatTile
+          label="Ventas pagadas"
+          value={ventas ? money(ventas.ventas_pagadas) : '—'}
+          sub={ventas ? `${ventas.pedidos} pedidos` : 'Se activa con Pedidos'}
+        />
+        <StatTile
+          label="Por enviar"
+          value={dash(ventas?.por_enviar)}
+          sub={ventas ? 'pedidos pendientes' : 'Se activa con Pedidos'}
+        />
+        <StatTile
+          label="Clientas"
+          value={dash(clientas)}
+          sub={clientas === null ? 'Se activa con el CRM' : 'registradas'}
+        />
+        <StatTile
+          label="Piezas en inventario"
+          value={dash(piezas)}
+          sub={productos != null ? `${productos} productos` : 'Se activa con Catálogo'}
+        />
       </div>
 
       {/* Organizador actual */}

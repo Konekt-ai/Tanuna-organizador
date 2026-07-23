@@ -1,19 +1,23 @@
-import { PageHeader, ComingSoon } from '@/components/panel/ui';
+import { PageHeader } from '@/components/panel/ui';
+import { listClientas, clientasNecesitanAtencion } from '@/lib/ventas';
+import ClientasClient from '@/components/panel/ventas/ClientasClient';
+import SetupNeeded from '@/components/panel/catalogo/SetupNeeded';
 
 export const metadata = { title: 'Clientas · Taluna' };
+export const dynamic = 'force-dynamic';
 
-export default function ClientasPage() {
+export default async function ClientasPage() {
+  const { ready, items } = await listClientas();
+  const atencion = ready ? clientasNecesitanAtencion(items) : [];
+
   return (
-    <div className="mx-auto max-w-6xl">
-      <PageHeader
-        title="Clientas"
-        subtitle="Contactos, seguimientos y respuestas pendientes."
-      />
-      <ComingSoon
-        title="El CRM de Clientas llega en la Fase 3"
-        description="Gestión de clientas con estatus (compra, espera respuesta, nueva…), canal de origen, seguimientos y respuesta rápida por WhatsApp."
-        phase="Fase 3 · Pedidos + Clientas"
-      />
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader title="Clientas" subtitle="Contactos, seguimientos y respuestas pendientes." />
+      {!ready ? (
+        <SetupNeeded file="supabase/ventas-setup.sql" />
+      ) : (
+        <ClientasClient items={items} atencion={atencion} />
+      )}
     </div>
   );
 }
