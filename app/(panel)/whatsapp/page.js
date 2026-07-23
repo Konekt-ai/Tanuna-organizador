@@ -14,7 +14,7 @@ export default async function WhatsappPage() {
     return (
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader title="WhatsApp Business" subtitle="Flujos automatizados, plantillas y envío." />
-        <SetupNeeded file="supabase/ventas-setup.sql + whatsapp-setup.sql" />
+        <SetupNeeded file="supabase/sales-setup.sql + whatsapp-setup.sql" />
       </div>
     );
   }

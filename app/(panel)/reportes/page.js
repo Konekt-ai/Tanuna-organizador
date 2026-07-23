@@ -22,7 +22,7 @@ export default async function ReportesPage({ searchParams }) {
     return (
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader title="Reportes" subtitle="Información para tomar decisiones sobre ventas, productos e inventario." />
-        <SetupNeeded file="supabase/ventas-setup.sql" />
+        <SetupNeeded file="supabase/sales-setup.sql" />
       </div>
     );
   }

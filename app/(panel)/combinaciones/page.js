@@ -2,7 +2,6 @@ import { PageHeader } from '@/components/panel/ui';
 import { listCombinaciones, listProductosSimple } from '@/lib/catalog';
 import CombinacionesClient from '@/components/panel/catalogo/CombinacionesClient';
 import SetupNeeded from '@/components/panel/catalogo/SetupNeeded';
-import MigrarCatalogo from '@/components/panel/catalogo/MigrarCatalogo';
 
 export const metadata = { title: 'Arma tu Taluna · Taluna' };
 export const dynamic = 'force-dynamic';
@@ -20,12 +19,9 @@ export default async function CombinacionesPage() {
         subtitle="Bolsa + color + strap + largo. Esta estructura define lo que la clienta puede armar."
       />
       {!ready ? (
-        <SetupNeeded />
+        <SetupNeeded file="supabase/combinations-setup.sql" />
       ) : (
-        <>
-          {items.length === 0 && bolsas.length === 0 && <MigrarCatalogo />}
-          <CombinacionesClient items={items} bolsas={bolsas} straps={straps} />
-        </>
+        <CombinacionesClient items={items} bolsas={bolsas} straps={straps} />
       )}
     </div>
   );

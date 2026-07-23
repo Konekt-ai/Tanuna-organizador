@@ -14,7 +14,7 @@ export default async function ClientasPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="Clientas" subtitle="Contactos, seguimientos y respuestas pendientes." />
       {!ready ? (
-        <SetupNeeded file="supabase/ventas-setup.sql" />
+        <SetupNeeded file="supabase/sales-setup.sql" />
       ) : (
         <ClientasClient items={items} atencion={atencion} />
       )}

@@ -2,7 +2,6 @@ import { PageHeader } from '@/components/panel/ui';
 import { listCategorias } from '@/lib/catalog';
 import CategoriasClient from '@/components/panel/catalogo/CategoriasClient';
 import SetupNeeded from '@/components/panel/catalogo/SetupNeeded';
-import MigrarCatalogo from '@/components/panel/catalogo/MigrarCatalogo';
 
 export const metadata = { title: 'Categorías · Taluna' };
 export const dynamic = 'force-dynamic';
@@ -12,17 +11,11 @@ export default async function CategoriasPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader
-        title="Categorías"
-        subtitle="Estructura de navegación del catálogo."
-      />
+      <PageHeader title="Categorías" subtitle="Estructura de navegación del catálogo." />
       {!ready ? (
-        <SetupNeeded />
+        <SetupNeeded file="el esquema base (categories)" />
       ) : (
-        <>
-          {items.length === 0 && <MigrarCatalogo />}
-          <CategoriasClient items={items} />
-        </>
+        <CategoriasClient items={items} />
       )}
     </div>
   );

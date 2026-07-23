@@ -1,7 +1,7 @@
 import { Database } from 'lucide-react';
 
 // Estado que se muestra cuando aún no se corrió el SQL del catálogo en Supabase.
-export default function SetupNeeded({ file = 'supabase/catalog-setup.sql' }) {
+export default function SetupNeeded({ file = 'los scripts SQL de supabase/' }) {
   return (
     <div className="rounded-xl border border-dashed border-border bg-card/60 p-8 shadow-card-sm">
       <div className="flex items-start gap-4">

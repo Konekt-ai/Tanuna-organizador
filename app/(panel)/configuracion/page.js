@@ -14,7 +14,7 @@ export default async function ConfiguracionPage() {
     return (
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader title="Configuración" subtitle="Ajustes de la tienda, equipo, envíos, pagos e integraciones." />
-        <SetupNeeded file="supabase/roles-setup.sql + config-setup.sql" />
+        <SetupNeeded file="supabase/roles-setup.sql + store-config-setup.sql" />
       </div>
     );
   }

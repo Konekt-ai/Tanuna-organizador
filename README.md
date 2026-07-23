@@ -51,21 +51,26 @@ detrás de un **login**. UI 100 % en español, mobile-first, con **modo claro/os
 
 ### 2. Correr los scripts SQL — **en este orden**
 
+> El **catálogo** (`categories`, `products`, `product_variants`, `product_images`)
+> **ya existe** en tu Supabase; el panel se conecta a esas tablas tal cual. Estos
+> scripts solo **agregan** lo que falta (roles, combinaciones, inventario, ventas,
+> config, whatsapp).
+
 En Supabase → **SQL Editor → New query**, pega y ejecuta cada archivo de la
 carpeta [`supabase/`](supabase/). Todos son **idempotentes** (se pueden correr
 más de una vez):
 
 | # | Archivo | Crea |
 | --- | --- | --- |
-| 1 | `studio-setup.sql` | Organizador: `studio_docs` + bucket `studio` + `set_updated_at()` |
+| 1 | `studio-setup.sql` | `set_updated_at()`, bucket `studio` (fotos) y `studio_docs` (Organizador) |
 | 2 | `roles-setup.sql` | `profiles` + roles (Fundadora/Equipo) + RLS |
-| 3 | `catalog-setup.sql` | `categorias`, `productos`, `producto_variantes`, `producto_imagenes`, `combinaciones` |
-| 4 | `inventario-setup.sql` | `movimientos_inventario` + trigger que ajusta el stock |
-| 5 | `ventas-setup.sql` | `clientas`, `pedidos`, `pedido_items` + folio `T-####` |
-| 6 | `config-setup.sql` | `config_tienda` (tienda + envíos) |
-| 7 | `whatsapp-setup.sql` | `wa_flujos`, `wa_plantillas`, `wa_mensajes` (+ flujos semilla) |
+| 3 | `combinations-setup.sql` | `combinations` (Arma tu Taluna) |
+| 4 | `inventory-setup.sql` | `inventory_movements` + trigger que ajusta el stock |
+| 5 | `sales-setup.sql` | `customers`, `orders`, `order_items` + folio `T-####` |
+| 6 | `store-config-setup.sql` | `store_config` (tienda + envíos) |
+| 7 | `whatsapp-setup.sql` | `wa_flows`, `wa_templates`, `wa_messages` (+ flujos semilla) |
 
-> El orden importa: cada script se apoya en tablas/funciones de los anteriores.
+> El orden importa: cada script se apoya en funciones/tablas de los anteriores.
 > **Reportes** no necesita SQL (calcula sobre las tablas existentes).
 
 ### 3. Crear la cuenta de la dueña
@@ -99,9 +104,8 @@ Abre <http://localhost:3000> y entra con la cuenta del paso 3.
 
 1. **Configuración → "Hacerme Fundadora"**: te asigna el rol de administradora.
    (Arranque seguro: solo funciona mientras no exista ninguna Fundadora.)
-2. **Productos → "Traer el catálogo del Organizador"**: primero *"Ver qué se
-   copiaría"* (no escribe nada) y luego *"Aplicar migración"* para pasar tus
-   bolsas, straps y combinaciones ya capturadas al catálogo nuevo. No borra nada.
+2. Tu **catálogo** ya aparece en **Productos** y **Categorías** (lee tus tablas
+   existentes). Crea combinaciones en **Arma tu Taluna**.
 3. Empieza a registrar **pedidos**, **clientas** y **movimientos de inventario**;
    el **Dashboard** y **Reportes** se llenan solos con esos datos.
 
@@ -136,8 +140,7 @@ taluna-organizador/
 │   │   ├── reportes/  configuracion/
 │   │   │   └── (page.js + actions.js por sección)
 │   └── api/
-│       ├── studio/…             # APIs del Organizador (estado + fotos)
-│       └── catalog/migrate      # migración del Organizador -> tablas
+│       └── studio/…             # APIs del Organizador (estado + fotos)
 ├── components/panel/            # shell (Sidebar, Topbar…) + UI por dominio
 ├── lib/
 │   ├── auth.js                  # sesión + roles (getPanelUser, requireFundadora…)
@@ -152,14 +155,19 @@ taluna-organizador/
 
 ## Modelo de datos (resumen)
 
-- **Catálogo**: `categorias`, `productos`, `producto_variantes` (nivel de stock),
-  `producto_imagenes`, `combinaciones`.
-- **Inventario**: `movimientos_inventario` (con signo); un trigger ajusta
-  `producto_variantes.stock` y **nunca deja stock negativo**.
-- **Ventas**: `clientas` (CRM), `pedidos` (folio por secuencia), `pedido_items`.
+El esquema está en **inglés** (así ya existía tu catálogo); la UI es en español.
+El "tipo" (bolsa/strap/cinturón) se **deriva de la categoría** (`products` no
+tiene columna de tipo).
+
+- **Catálogo (existente)**: `categories`, `products`, `product_variants` (nivel de
+  stock), `product_images`.
+- **Combinaciones**: `combinations` (empareja un producto-bolsa con uno-strap).
+- **Inventario**: `inventory_movements` (con signo); un trigger ajusta
+  `product_variants.stock` y **nunca deja stock negativo**.
+- **Ventas**: `customers` (CRM), `orders` (folio por secuencia), `order_items`.
   Al **enviar** un pedido se insertan salidas de inventario (una sola vez).
-- **Sistema**: `profiles` (roles), `config_tienda`, `wa_flujos` / `wa_plantillas`
-  / `wa_mensajes`.
+- **Sistema**: `profiles` (roles), `store_config`, `wa_flows` / `wa_templates`
+  / `wa_messages`.
 - **Organizador (legado)**: `studio_docs` (JSON) + bucket `studio` (fotos).
 
 ---

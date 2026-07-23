@@ -51,14 +51,7 @@ function ProductoEditor({ producto, categorias, onDone, onCancel, run, busy }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Nombre"><input name="nombre" defaultValue={p.nombre} required className={inputCls} /></Field>
-        <Field label="Tipo">
-          <select name="tipo" defaultValue={p.tipo || 'bolsa'} className={inputCls}>
-            <option value="bolsa">Bolsa</option>
-            <option value="strap">Strap</option>
-            <option value="cinturon">Cinturón</option>
-          </select>
-        </Field>
-        <Field label="Categoría">
+        <Field label="Categoría (define si es bolsa/strap/cinturón)">
           <select name="categoria_id" defaultValue={p.categoria_id || ''} className={inputCls}>
             <option value="">— sin categoría —</option>
             {categorias.map((c) => (
@@ -77,11 +70,8 @@ function ProductoEditor({ producto, categorias, onDone, onCancel, run, busy }) {
           <input type="checkbox" name="destacado" defaultChecked={!!p.destacado} className="h-4 w-4" />
           Destacado
         </label>
-        <Field label="Alto (cm)"><input name="dim_alto" type="number" step="0.1" defaultValue={p.dim_alto ?? ''} className={inputCls} /></Field>
-        <Field label="Ancho (cm)"><input name="dim_ancho" type="number" step="0.1" defaultValue={p.dim_ancho ?? ''} className={inputCls} /></Field>
-        <Field label="Largo (cm)"><input name="dim_largo" type="number" step="0.1" defaultValue={p.dim_largo ?? ''} className={inputCls} /></Field>
+        <Field label="Medidas"><input name="medidas" defaultValue={p.medidas || ''} placeholder="28 × 22 × 10 cm" className={inputCls} /></Field>
         <Field label="Materiales"><input name="materiales" defaultValue={p.materiales || ''} className={inputCls} /></Field>
-        <Field label="Cuidados"><input name="cuidados" defaultValue={p.cuidados || ''} className={inputCls} /></Field>
         <Field label="Slug (URL)"><input name="slug" defaultValue={p.slug || ''} placeholder="se genera solo" className={inputCls} /></Field>
         <Field label="Descripción corta" span><input name="descripcion_corta" defaultValue={p.descripcion_corta || ''} className={inputCls} /></Field>
         <Field label="Descripción larga" span>
@@ -254,10 +244,7 @@ export default function ProductosClient({ items, categorias = [] }) {
   );
 
   const sel = items.find((p) => p.id === selId) || null;
-  const medidas =
-    sel && (sel.dim_alto || sel.dim_ancho || sel.dim_largo)
-      ? `${sel.dim_alto ?? '—'} × ${sel.dim_ancho ?? '—'} × ${sel.dim_largo ?? '—'} cm`
-      : null;
+  const medidas = sel?.medidas || null;
   const variantes = sel?.producto_variantes || [];
   const imagenes = (sel?.producto_imagenes || []).slice().sort((a, b) => a.orden - b.orden);
   const stockTotal = variantes.reduce((s, v) => s + (v.stock || 0), 0);
@@ -351,7 +338,6 @@ export default function ProductosClient({ items, categorias = [] }) {
                 <Attr label="Stock total" value={stockTotal} />
                 <Attr label="Medidas" value={medidas} />
                 <Attr label="Materiales" value={sel.materiales} />
-                <Attr label="Cuidados" value={sel.cuidados} />
               </div>
               {(sel.descripcion_corta || sel.descripcion_larga) && (
                 <div className="mt-5 space-y-2 border-t border-border pt-4 text-sm text-muted-foreground">

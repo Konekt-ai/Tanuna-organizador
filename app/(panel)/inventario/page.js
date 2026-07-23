@@ -29,7 +29,7 @@ export default async function InventarioPage() {
     return (
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader title="Inventario" subtitle="Piezas disponibles por producto y variante." />
-        <SetupNeeded file="supabase/catalog-setup.sql + inventario-setup.sql" />
+        <SetupNeeded file="el esquema base + supabase/inventory-setup.sql" />
       </div>
     );
   }
@@ -49,7 +49,7 @@ export default async function InventarioPage() {
         subtitle="Piezas disponibles por producto. Cada cambio te muestra qué se modifica antes de guardar."
       />
 
-      {!invReady && <SetupNeeded file="supabase/inventario-setup.sql" />}
+      {!invReady && <SetupNeeded file="supabase/inventory-setup.sql" />}
 
       {/* KPIs */}
       {kpis && (

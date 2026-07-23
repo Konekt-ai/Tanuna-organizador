@@ -15,7 +15,7 @@ export default async function PedidosPage() {
     return (
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader title="Pedidos" subtitle="Ventas en curso, pagos y envíos." />
-        <SetupNeeded file="supabase/ventas-setup.sql" />
+        <SetupNeeded file="supabase/sales-setup.sql" />
       </div>
     );
   }
