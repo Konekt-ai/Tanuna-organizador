@@ -1,85 +1,110 @@
-# Taluna · Panel
+# Taluna · Organizador
 
-**Panel administrativo interno** de **Taluna MX** (bolsas artesanales). Un solo
-lugar para llevar el negocio: catálogo, inventario, pedidos, clientas (CRM),
-reportes, configuración y WhatsApp. Todo se guarda **en la nube** (Supabase)
-detrás de un **login**. UI 100 % en español, mobile-first, con **modo claro/oscuro**.
+App web **móvil e interna** para que la dueña de **Taluna MX** organice su
+catálogo (bolsas, straps, cinturones, compatibilidades y combinaciones) y suba
+fotos desde el celular. **No es la tienda**: es una herramienta de staging para
+dejar todo ordenado antes de pasarlo a la tienda real.
 
-> Se construyó sobre el **Organizador de catálogo** original (`public/estudio.html`),
-> que sigue disponible y del que se puede **migrar** el catálogo al panel nuevo.
+Todo se guarda **en la nube** (Supabase) detrás de un **login**, con respaldo
+local automático: si no hay conexión, sigue funcionando en el equipo y reintenta
+subir cuando vuelve la señal.
 
 ---
 
 ## Stack
 
-- **Next.js 14** (App Router) + **React** + **Tailwind CSS** (tokens en OKLCH,
-  tema claro/oscuro con `next-themes`, iconos `lucide-react`).
-- **Supabase**: Auth (correo + contraseña), Postgres y Storage.
-- Todas las **escrituras** se hacen en el servidor con la llave `service_role`
-  (Server Actions y rutas API), autorizando por rol. Las tablas tienen **RLS
-  activado** y cerradas al público.
-- Desplegable en **Vercel**.
+- **Next.js 14** (App Router) + **React** + **Tailwind CSS**
+- **Supabase**: Auth (correo + contraseña), Postgres y Storage
+- Las **escrituras** se hacen en el servidor con la llave `service_role`
+  (rutas API), igual de seguro que un panel admin
+- Desplegable en **Vercel**. UI 100 % en español, mobile-first
 
 ---
 
-## Las 10 secciones
+## Cómo está armado
 
-| Sección | Qué hace |
-| --- | --- |
-| **Inicio** | Dashboard con KPIs reales (ventas, pedidos, clientas, piezas) |
-| **Pedidos** | Alta con folio `T-####` y líneas; al **marcar enviado descuenta inventario** |
-| **Clientas (CRM)** | Contactos, estatus, seguimiento; responder por **WhatsApp** o correo |
-| **WhatsApp** | Flujos + plantillas por tono; enviar por `wa.me` con vista previa |
-| **Productos** | Catálogo con variantes por color, fotos y estado de publicación |
-| **Categorías** | Alta/edición/orden de categorías |
-| **Arma tu Taluna** | Combinaciones bolsa + color + strap + largo |
-| **Inventario** | Movimientos (entrada/salida/ajuste), historial y KPIs; sin stock negativo |
-| **Reportes** | Ventas por día, más vendidos, qué reponer y canales (solo lectura) |
-| **Configuración** | Datos de tienda, envíos y **equipo** (roles Fundadora / Equipo) |
+La interfaz completa del Organizador es un solo archivo estático,
+`public/estudio.html` (el prototipo, ya conectado a la nube). Next.js le pone
+alrededor el **login**, la **protección de rutas** y las **APIs** que guardan en
+Supabase.
+
+```text
+taluna-organizador/
+├── app/
+│   ├── layout.js                # layout raíz (fuentes Fraunces + Manrope)
+│   ├── globals.css              # Tailwind + estilos base
+│   ├── page.js                  # panel de inicio (abre el Organizador)
+│   ├── actions.js               # server action: cerrar sesión
+│   ├── login/
+│   │   ├── page.js              # pantalla de login
+│   │   └── login-form.js        # formulario (client) correo + contraseña
+│   └── api/
+│       └── studio/
+│           ├── state/route.js   # GET/PUT del documento JSON (studio_docs)
+│           └── image/route.js   # POST/DELETE de fotos (bucket "studio")
+├── components/
+│   └── TalunaGlyph.js           # glifo de marca
+├── lib/
+│   ├── auth.js                  # getUser() / requireUser()
+│   └── supabase/
+│       ├── server.js            # cliente ligado a cookies (sabe quién entra)
+│       ├── browser.js           # cliente del navegador (login)
+│       └── admin.js             # cliente service_role (solo servidor)
+├── public/
+│   └── estudio.html             # el Organizador completo (UI + lógica)
+├── supabase/
+│   └── studio-setup.sql         # se corre 1 vez: tabla + trigger + bucket
+├── middleware.js                # protege todo: sin sesión -> /login
+├── .env.example                 # plantilla de variables
+└── package.json
+```
+
+### Datos (tipo documento)
+
+- Todo el estado (bolsas, straps, cinturones, compatibilidades, combinaciones,
+  metadatos) vive como **un documento JSON** en la tabla
+  `studio_docs (id text pk, data jsonb, updated_at)` — fila con `id = 'main'`.
+- Las **fotos** van al bucket de Storage **`studio`** (público de lectura) y en
+  el JSON solo se guardan las **URLs**.
+- Rutas API (todas validan la sesión con `getUser` y escriben con `service_role`):
+  - `GET /api/studio/state` — leer el JSON
+  - `PUT /api/studio/state` — guardar el JSON
+  - `POST /api/studio/image` — subir una foto
+  - `DELETE /api/studio/image` — borrar una foto
 
 ---
 
 ## Puesta en marcha
 
-### 1. Proyecto en Supabase y llaves
+### 1. Crear el proyecto en Supabase
 
-1. <https://supabase.com> → **New project**.
-2. **Project Settings → API** y copia:
+1. Entra a <https://supabase.com> → **New project**.
+2. Cuando esté listo, ve a **Project Settings → API** y copia:
    - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
    - **anon public** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - **service_role** (secreta) → `SUPABASE_SERVICE_ROLE_KEY`
 
-### 2. Correr los scripts SQL — **en este orden**
+### 2. Crear la tabla y el bucket
 
-> El **catálogo** (`categories`, `products`, `product_variants`, `product_images`)
-> **ya existe** en tu Supabase; el panel se conecta a esas tablas tal cual. Estos
-> scripts solo **agregan** lo que falta (roles, combinaciones, inventario, ventas,
-> config, whatsapp).
-
-En Supabase → **SQL Editor → New query**, pega y ejecuta cada archivo de la
-carpeta [`supabase/`](supabase/). Todos son **idempotentes** (se pueden correr
-más de una vez):
-
-| # | Archivo | Crea |
-| --- | --- | --- |
-| 1 | `studio-setup.sql` | `set_updated_at()`, bucket `studio` (fotos) y `studio_docs` (Organizador) |
-| 2 | `roles-setup.sql` | `profiles` + roles (Fundadora/Equipo) + RLS |
-| 3 | `combinations-setup.sql` | `combinations` (Arma tu Taluna) |
-| 4 | `inventory-setup.sql` | `inventory_movements` + trigger que ajusta el stock |
-| 5 | `sales-setup.sql` | `customers`, `orders`, `order_items` + folio `T-####` |
-| 6 | `store-config-setup.sql` | `store_config` (tienda + envíos) |
-| 7 | `whatsapp-setup.sql` | `wa_flows`, `wa_templates`, `wa_messages` (+ flujos semilla) |
-
-> El orden importa: cada script se apoya en funciones/tablas de los anteriores.
-> **Reportes** no necesita SQL (calcula sobre las tablas existentes).
+En Supabase → **SQL Editor → New query**, pega el contenido de
+[`supabase/studio-setup.sql`](supabase/studio-setup.sql) y dale **Run**. Esto
+crea la tabla `studio_docs` (con RLS cerrada y trigger de `updated_at`) y el
+bucket `studio` (público de lectura). Es seguro correrlo más de una vez.
 
 ### 3. Crear la cuenta de la dueña
 
-Supabase → **Authentication → Users → Add user → Create new user**: escribe su
-**correo** y **contraseña** y marca **Auto Confirm User**. (Cualquier cuenta
-creada en el proyecto puede entrar; el acceso fino se controla por **rol**.)
+En Supabase → **Authentication → Users → Add user → Create new user**:
+
+- escribe su **correo** y una **contraseña**,
+- marca **Auto Confirm User** (para que pueda entrar sin verificar correo).
+
+Con eso ya puede iniciar sesión. (Por defecto cualquier cuenta creada en este
+proyecto puede entrar. Para limitar a **un solo correo**, define `ADMIN_EMAIL`
+en el entorno y descomenta el bloque correspondiente en `lib/auth.js`.)
 
 ### 4. Variables de entorno (local)
+
+Copia la plantilla y rellénala:
 
 ```bash
 cp .env.example .env.local
@@ -91,105 +116,52 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
 ```
 
-### 5. Correr en local
+### 5. Correr local
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abre <http://localhost:3000> y entra con la cuenta del paso 3.
-
-### 6. Primeros pasos dentro del panel
-
-1. **Configuración → "Hacerme Fundadora"**: te asigna el rol de administradora.
-   (Arranque seguro: solo funciona mientras no exista ninguna Fundadora.)
-2. Tu **catálogo** ya aparece en **Productos** y **Categorías** (lee tus tablas
-   existentes). Crea combinaciones en **Arma tu Taluna**.
-3. Empieza a registrar **pedidos**, **clientas** y **movimientos de inventario**;
-   el **Dashboard** y **Reportes** se llenan solos con esos datos.
+Abre <http://localhost:3000>. Te mandará a `/login`; entra con la cuenta del
+paso 3 y toca **Abrir el Organizador**.
 
 ---
 
 ## Desplegar en Vercel
 
 1. Sube el proyecto a un repo de GitHub.
-2. <https://vercel.com> → **Add New → Project** → importa el repo.
-3. **Settings → Environment Variables**: agrega las **mismas tres** variables del
-   `.env.local`. La `service_role` para todos los entornos y **nunca** con
-   prefijo `NEXT_PUBLIC_`.
-4. **Deploy** (Vercel detecta Next.js solo).
-5. En Supabase → **Authentication → URL Configuration** agrega la URL de Vercel a
-   *Site URL* / *Redirect URLs* para que el login funcione en producción.
+2. En <https://vercel.com> → **Add New → Project** → importa el repo.
+3. En **Settings → Environment Variables** agrega las **mismas tres** variables
+   del `.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY`). Marca la `service_role` para todos los entornos;
+   **nunca** la pongas con prefijo `NEXT_PUBLIC_`.
+4. **Deploy**. Vercel detecta Next.js automáticamente.
+
+> Tip: en Supabase → **Authentication → URL Configuration** agrega la URL de
+> Vercel a *Site URL* / *Redirect URLs* para que el login funcione en producción.
 
 ---
 
-## Estructura del proyecto
+## Indicador de guardado
 
-```text
-taluna-organizador/
-├── app/
-│   ├── layout.js                # layout raíz (fuentes + tema claro/oscuro)
-│   ├── globals.css              # tokens OKLCH (claro/oscuro) + base
-│   ├── login/                   # pantalla de login
-│   ├── (panel)/                 # el panel privado (todas las secciones)
-│   │   ├── layout.js            # shell + requiere sesión
-│   │   ├── page.js              # dashboard (Inicio)
-│   │   ├── pedidos/  clientas/  whatsapp/
-│   │   ├── productos/  categorias/  combinaciones/  inventario/
-│   │   ├── reportes/  configuracion/
-│   │   │   └── (page.js + actions.js por sección)
-│   └── api/
-│       └── studio/…             # APIs del Organizador (estado + fotos)
-├── components/panel/            # shell (Sidebar, Topbar…) + UI por dominio
-├── lib/
-│   ├── auth.js                  # sesión + roles (getPanelUser, requireFundadora…)
-│   ├── catalog.js  inventario.js  ventas.js  reportes.js  config.js  whatsapp.js
-│   └── supabase/                # clientes server / browser / admin(service_role)
-├── public/estudio.html          # el Organizador original (sigue funcionando)
-├── supabase/*.sql               # los 7 scripts de arriba
-└── middleware.js                # protege todo: sin sesión -> /login
-```
+Arriba a la derecha del Organizador verás el estado en vivo:
+
+| Texto | Qué significa |
+|---|---|
+| **Guardando…** | Mandando cambios a la nube |
+| **Guardado ✓ en la nube** | Todo respaldado en Supabase |
+| **Sin conexión · guardado en este equipo** | Trabajando local; reintenta solo |
+| **Inicia sesión para guardar** | Caducó la sesión → vuelve a entrar |
 
 ---
 
-## Modelo de datos (resumen)
+## Notas de seguridad
 
-El esquema está en **inglés** (así ya existía tu catálogo); la UI es en español.
-El "tipo" (bolsa/strap/cinturón) se **deriva de la categoría** (`products` no
-tiene columna de tipo).
-
-- **Catálogo (existente)**: `categories`, `products`, `product_variants` (nivel de
-  stock), `product_images`.
-- **Combinaciones**: `combinations` (empareja un producto-bolsa con uno-strap).
-- **Inventario**: `inventory_movements` (con signo); un trigger ajusta
-  `product_variants.stock` y **nunca deja stock negativo**.
-- **Ventas**: `customers` (CRM), `orders` (folio por secuencia), `order_items`.
-  Al **enviar** un pedido se insertan salidas de inventario (una sola vez).
-- **Sistema**: `profiles` (roles), `store_config`, `wa_flows` / `wa_templates`
-  / `wa_messages`.
-- **Organizador (legado)**: `studio_docs` (JSON) + bucket `studio` (fotos).
-
----
-
-## Roles y seguridad
-
-- **Roles**: `fundadora` (acceso total, edita Configuración y Equipo) y `staff`.
-  La primera se asigna con **"Hacerme Fundadora"** o marcándola por SQL
-  (bootstrap comentado en `roles-setup.sql`).
-- Todas las tablas tienen **RLS activado**; el acceso pasa por el servidor con
-  `service_role`, que **solo vive en el servidor** (`lib/supabase/admin.js`
+- `studio_docs` tiene **RLS activado y sin políticas**: nadie anónimo la lee ni
+  escribe. Solo el servidor (con `service_role`, que salta RLS) puede tocarla.
+- La llave `service_role` vive **solo en el servidor** (`lib/supabase/admin.js`
   importa `server-only`: el build falla si se cuela al cliente).
-- `middleware.js` exige sesión en toda la app.
-
----
-
-## Pendientes / próximos pasos (no bloquean el uso)
-
-- **WhatsApp Cloud API (Meta)**: hoy el envío es por enlace `wa.me` (gratis, sin
-  aprobación). El envío automático con acuses de entrega/lectura requiere
-  verificación de negocio y tiene costo; el modelo ya deja lugar (`canal = cloud_api`).
-- **Pagos** (Stripe / Mercado Pago): pendiente; usar checkout hospedado.
-- **Congelar el Organizador** (`public/estudio.html`) a solo-lectura una vez que
-  valides que la migración cargó todo correctamente, para tener una sola fuente
-  de verdad del catálogo.
+- El `middleware.js` exige sesión en toda la app y en `/api/studio/*`.
+- El bucket `studio` es público **de lectura** (las fotos se ven con su URL);
+  subir y borrar solo ocurre por las APIs autenticadas.
